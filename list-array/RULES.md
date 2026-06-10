@@ -28,6 +28,14 @@ Implement a generic array-backed list with index operations.
 - [ ] If growth is implemented, allocate new larger array and copy manually.
 - [ ] Shift elements for middle insert/delete.
 
+## Auto-resize policy
+- [ ] Grow when `Len() == Cap()`.
+- [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
+- [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
+- [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
+- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] Use hysteresis; do not resize on every delete.
+
 ## Invariants
 - [ ] Live elements are in index range `[0, Len())`.
 - [ ] `Len()` never exceeds capacity.

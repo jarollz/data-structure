@@ -26,6 +26,12 @@ Implement a generic n-ary tree for hierarchical data.
 - [ ] Store parent reference/index.
 - [ ] Store child links with array-only strategy.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on `AddChild`.
+- [ ] Reclaim node storage on `RemoveSubtree`.
+- [ ] Optional free-list reuse is allowed if tree invariants remain valid.
+
 ## Invariants
 - [ ] Exactly one root exists while tree is non-empty.
 - [ ] Non-root nodes have exactly one parent.

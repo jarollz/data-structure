@@ -32,6 +32,12 @@ Implement an ordered map `K -> V` on top of an AVL tree.
 - [ ] Keep free-list for node reuse.
 - [ ] Rebalance with AVL rotations after insert/delete.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Free-list reuse is recommended to reduce allocation churn.
+
 ## Invariants
 - [ ] BST ordering holds for every node.
 - [ ] For each node, height difference between children is at most 1.

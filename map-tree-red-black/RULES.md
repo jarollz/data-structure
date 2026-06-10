@@ -31,6 +31,12 @@ Implement an ordered map `K -> V` using a red-black tree.
 - [ ] Use free-list for node reuse.
 - [ ] Apply red-black insert and delete fix-up rules.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Free-list reuse is recommended to reduce allocation churn.
+
 ## Invariants
 - [ ] BST ordering holds.
 - [ ] Root is black.

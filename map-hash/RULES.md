@@ -40,6 +40,15 @@ Implement a generic hash map with:
 - [ ] Resize by allocating a larger array and rehashing occupied entries.
 - [ ] Tombstones must not break probe-chain correctness.
 
+## Auto-resize policy
+- [ ] Grow by rehashing to larger table when `LoadFactor() >= 0.70`.
+- [ ] Shrink by rehashing to smaller table when `LoadFactor() <= 0.15` and `Cap() > minCap`.
+- [ ] Cleanup rehash at same capacity when tombstones are high (for example `tombstones > live/2`).
+- [ ] Maintain tombstone-safe probing after any grow/shrink/cleanup rehash.
+- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] Resizing is internal policy; do not expose public `Grow()` or `Shrink()` APIs.
+- [ ] Use hysteresis to avoid resize thrash around thresholds.
+
 ## Invariants
 - [ ] `Len()` equals number of occupied slots.
 - [ ] No duplicate keys among occupied slots.

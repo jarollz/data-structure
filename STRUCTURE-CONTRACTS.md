@@ -47,6 +47,28 @@ Detailed implementation and test guidance lives in each folder `RULES.md`.
 | `tree-avl` | BST ordering + AVL balancing |
 | `tree-red-black` | BST ordering + red-black balancing |
 
+## Auto-resize policy summary
+
+| Folder | Policy |
+|---|---|
+| `list-array` | Auto-resize capacity. Grow at `Len()==Cap()`. Grow factor `2x` (<1024) else `1.5x`. Shrink at `Len()<=Cap()/4` with `minCap=max(16,initial)`. |
+| `queue` | Auto-resize circular buffer with same thresholds as `list-array`. On resize, repack logical front->back order. |
+| `stack` | Auto-resize capacity with same thresholds as `list-array`. |
+| `heap` | Auto-resize backing array with same thresholds as `list-array`; heap-order invariants preserved after copy. |
+| `map-hash` | Internal rehash policy. Grow at `LoadFactor()>=0.70`; shrink at `<=0.15` above `minCap`; same-cap cleanup rehash when tombstones are high. No public `Grow()/Shrink()`. |
+| `list-linked-singly` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear. |
+| `list-linked-doubly` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear. |
+| `list-skip` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear; optional current-level reduction after heavy deletes. |
+| `map-tree-avl` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear (free-list recommended). |
+| `map-tree-red-black` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear (free-list recommended). |
+| `tree-general` | No capacity resize API. Node alloc on `AddChild`, reclaim/reuse on `RemoveSubtree`. |
+| `tree-avl` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear (free-list recommended). |
+| `tree-red-black` | No capacity resize API. Node alloc on insert, reclaim/reuse on delete/clear (free-list recommended). |
+
+Notes:
+- Use hysteresis for capacity-backed structures; avoid resize thrash around thresholds.
+- Mutation during iteration remains not safe for all folders.
+
 ## Where to read next
 - Repo-wide process constraints: `AGENTS.md`
 - Per-structure implementation and test contracts: each folder `RULES.md`

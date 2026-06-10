@@ -29,6 +29,12 @@ Implement a set-like AVL tree for values of type `T`.
 - [ ] Free-list for reusable node slots.
 - [ ] AVL rotations for rebalance.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Free-list reuse is recommended to reduce allocation churn.
+
 ## Invariants
 - [ ] BST ordering holds.
 - [ ] Balance factor each node is in `[-1, 1]`.

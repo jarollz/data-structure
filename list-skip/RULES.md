@@ -27,6 +27,13 @@ Implement a generic ordered skip list.
 - [ ] Level references use arrays/indexes only.
 - [ ] Define level-generation policy and keep it deterministic enough for tests.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Optional free-list reuse is allowed if skip-list invariants remain valid.
+- [ ] Optional dynamic current-level reduction is allowed after heavy deletions.
+
 ## Invariants
 - [ ] Level 0 contains all live elements in sorted order.
 - [ ] Higher-level links preserve sorted order.

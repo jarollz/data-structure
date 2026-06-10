@@ -27,6 +27,15 @@ Implement a generic binary heap using arrays only.
 - [ ] Parent/child index formulas are correct.
 - [ ] Use sift-up and sift-down to restore heap property.
 
+## Auto-resize policy
+- [ ] Grow when `Len() == Cap()`.
+- [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
+- [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
+- [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
+- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] Resize only backing array; heap-order invariants must remain valid.
+- [ ] Use hysteresis; do not resize on every `PopTop`.
+
 ## Invariants
 - [ ] Complete tree shape in occupied prefix.
 - [ ] Heap property holds for all parent-child pairs.

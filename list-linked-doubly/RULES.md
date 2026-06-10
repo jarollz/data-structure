@@ -26,6 +26,12 @@ Implement a generic doubly linked list.
 - [ ] Track head and tail.
 - [ ] Keep length counter.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Optional free-list reuse is allowed if list invariants remain valid.
+
 ## Invariants
 - [ ] `head.prev` is nil/sentinel.
 - [ ] `tail.next` is nil/sentinel.

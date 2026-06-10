@@ -26,6 +26,12 @@ Implement a generic singly linked list.
 - [ ] Track head (and tail if append should be `O(1)`).
 - [ ] Keep length counter.
 
+## Auto-resize policy
+- [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] Allocate node storage on insert operations.
+- [ ] Reclaim node storage on delete/clear operations.
+- [ ] Optional free-list reuse is allowed if list invariants remain valid.
+
 ## Invariants
 - [ ] Traversing from head visits exactly `Len()` nodes.
 - [ ] Last node points to nil/sentinel.
