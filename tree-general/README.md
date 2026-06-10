@@ -1,37 +1,41 @@
 # tree-general
 
 ## Overview
-This folder is for a general tree (n-ary tree), not a binary search tree.
+This folder is for a general n-ary tree for hierarchical data, not a binary search tree.
 
-Each node can have zero or more children. This structure is useful for hierarchical data.
+Each node can have zero or more children. The public API is ID-based rather than pointer-based.
+
+## Project contract
+- `New(rootValue)` creates a tree with one root node.
+- Root node ID is always `0` while the tree is non-empty.
+- `AddChild(parentID, value)` appends a new last child and returns a new stable child ID.
+- Node IDs increase monotonically and are never reused.
+- `RemoveSubtree(nodeID)` removes the node and all descendants. `RemoveSubtree(0)` empties the tree.
+- `Get` and `Parent` report failure for invalid or removed IDs.
+- `ChildCount` returns `-1` for invalid or removed IDs.
+- `PreOrder()` yields each parent before its children.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You model parent-child hierarchy (file tree, org chart, menu tree).
-- You need traversal across hierarchy levels.
+- You are modeling parent-child hierarchies such as menus, org charts, or document trees.
+- You need stable node IDs.
 
 ## When not to use
-- You need fast ordered key lookup by comparator.
-- You need map-style key-value lookup guarantees.
-
-## Pros and cons
-- Pros: natural representation for hierarchical data, flexible child count.
-- Cons: generic search can be `O(n)` without extra indexing.
+- You need ordered lookup by comparator.
+- You need exact-key lookup like a hash map.
 
 ## Complexity
-- Add/remove child: usually `O(1)` to `O(n)` depending on representation.
-- Search by value: `O(n)`
-- Traversal: `O(n)`
+- `Get(nodeID)`: `O(1)`
+- `Parent(nodeID)`: `O(1)`
+- `AddChild(parentID, value)`: depends on the child-link traversal strategy
+- `RemoveSubtree(nodeID)`: `O(size of removed subtree)`
+- `PreOrder()`: `O(n)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/blazingorb/ntreego` - small n-ary tree library.
-- Many Go codebases implement custom n-ary trees per domain model.
-
-## Stdlib (Go 1.25+)
-- No general n-ary tree package in stdlib.
-
-## Language Built-ins
-- No built-in tree type.
+## Implementation notes
+- Use array-backed storage with stable IDs.
+- Store `parent`, `firstChild`, `nextSibling`, and `prevSibling` indexes.
+- Use `-1` as the nil sentinel index.
 
 ## Implementation Rules
 - Read and follow `tree-general/RULES.md` before writing code.

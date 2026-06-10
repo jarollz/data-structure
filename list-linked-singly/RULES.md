@@ -15,19 +15,22 @@ Implement a generic singly linked list.
 - [ ] `New() *List[T]`
 - [ ] `PushFront(v T)`
 - [ ] `PopFront() (T, bool)`
-- [ ] `Append(v T)`
-- [ ] `DeleteFirst(match func(T) bool) bool`
+- [ ] `Append(v T)` appends at tail in `O(1)` time.
+- [ ] `DeleteFirst(match func(T) bool) bool` removes first node for which `match(value)` returns `true`. Return `false` when no such node exists.
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `Values() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Each node stores value and next reference/index.
-- [ ] Track head (and tail if append should be `O(1)`).
+- [ ] Use an index-based node pool. Each live node has a value and `next` index.
+- [ ] Use `-1` as the nil/sentinel index.
+- [ ] Track head, tail, free-list head, and length.
+- [ ] `Append` must use tracked tail; do not re-scan from head.
 - [ ] Keep length counter.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Optional free-list reuse is allowed if list invariants remain valid.
@@ -49,6 +52,7 @@ Implement a generic singly linked list.
 - [ ] Delete from empty list is safe.
 - [ ] Delete head node works.
 - [ ] Single-element list transitions are correct.
+- [ ] `Clear()` resets head, tail, free-list state, and length.
 
 ## Test checklist
 - [ ] Head/tail transition tests.

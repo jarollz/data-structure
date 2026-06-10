@@ -14,23 +14,22 @@ Implement a generic hash map with:
 - [ ] Do not use helper containers that replace core hashmap logic.
 
 ## Generics and key contract
-- [ ] Use `V any` for values.
-- [ ] Define one clear key contract and keep it consistent:
-  - `K comparable` plus hash/equality adapter, or
-  - custom key contract with hash and equality hooks.
+- [ ] Use `K any` for keys and `V any` for values.
+- [ ] Key contract is explicit hooks passed to constructor: `hash func(K) uint64` and `equal func(a, b K) bool`.
+- [ ] `hash` and `equal` must both be non-nil; `New` may panic if either is nil.
 - [ ] Equal keys must hash consistently.
 - [ ] `Put` on an existing key overwrites value.
 
 ## Required API
-- [ ] `New(capacity int) *Map[K, V]`
-- [ ] `Put(key K, value V)`
+- [ ] `New(capacity int, hash func(K) uint64, equal func(a, b K) bool) *Map[K, V]` creates an empty map. Normalize `capacity <= 0` to `16`. Effective starting capacity is `max(16, capacity)`.
+- [ ] `Put(key K, value V)` inserts or overwrites. Overwrite does not change `Len()`.
 - [ ] `Get(key K) (V, bool)`
 - [ ] `Delete(key K) bool`
 - [ ] `Has(key K) bool`
 - [ ] `Len() int`
 - [ ] `Cap() int`
 - [ ] `Clear()`
-- [ ] `LoadFactor() float64`
+- [ ] `LoadFactor() float64` returns `float64(Len()) / float64(Cap())` and excludes tombstones.
 - [ ] `All() iter.Seq2[K, V]`
 
 ## Internal representation
@@ -39,13 +38,14 @@ Implement a generic hash map with:
 - [ ] Collision policy is linear probing only.
 - [ ] Resize by allocating a larger array and rehashing occupied entries.
 - [ ] Tombstones must not break probe-chain correctness.
+- [ ] `Put` should reuse first tombstone found during probe if key is not found later in same probe chain.
 
 ## Auto-resize policy
-- [ ] Grow by rehashing to larger table when `LoadFactor() >= 0.70`.
+- [ ] Grow by rehashing to larger table when probe occupancy `(live + tombstones) / Cap() >= 0.70`.
 - [ ] Shrink by rehashing to smaller table when `LoadFactor() <= 0.15` and `Cap() > minCap`.
 - [ ] Cleanup rehash at same capacity when tombstones are high (for example `tombstones > live/2`).
 - [ ] Maintain tombstone-safe probing after any grow/shrink/cleanup rehash.
-- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] `minCap` is normalized starting capacity.
 - [ ] Resizing is internal policy; do not expose public `Grow()` or `Shrink()` APIs.
 - [ ] Use hysteresis to avoid resize thrash around thresholds.
 
@@ -70,6 +70,7 @@ Implement a generic hash map with:
 - [ ] Delete missing key returns `false`.
 - [ ] Delete then reinsert same key works correctly.
 - [ ] Small initial capacity still works.
+- [ ] `Clear()` removes all live entries and tombstones and keeps `Cap() == minCap`.
 
 ## Test checklist
 - [ ] Unit tests for every API method.

@@ -15,22 +15,25 @@ Implement a set-like red-black tree for values of type `T`.
 
 ## Required API
 - [ ] `New(cmp func(a, b T) int) *Tree[T]`
-- [ ] `Insert(v T) bool`
-- [ ] `Delete(v T) bool`
+- [ ] `Insert(v T) bool` inserts new value and returns `true`; return `false` when equal value already exists.
+- [ ] `Delete(v T) bool` removes existing value and returns `true`; return `false` when value is missing.
 - [ ] `Has(v T) bool`
-- [ ] `Min() (T, bool)`
-- [ ] `Max() (T, bool)`
+- [ ] `Min() (T, bool)` returns `(zero, false)` on empty tree.
+- [ ] `Max() (T, bool)` returns `(zero, false)` on empty tree.
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `InOrder() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Array-backed nodes with `left/right/parent/color`.
+- [ ] Use an index-based node pool; do not use pointer-linked nodes.
+- [ ] Use `-1` as the nil/sentinel index and track root index explicitly.
+- [ ] Store `left`, `right`, `parent`, and `color` in arrays keyed by node index.
 - [ ] Free-list for reusable nodes.
 - [ ] Insert and delete fix-up routines maintain color properties.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Free-list reuse is recommended to reduce allocation churn.
@@ -51,6 +54,7 @@ Implement a set-like red-black tree for values of type `T`.
 
 ## Edge cases
 - [ ] Insert/delete on empty tree.
+- [ ] Duplicate insert returns `false` and leaves tree unchanged.
 - [ ] Delete root and near-root nodes.
 - [ ] Recolor and rotation branches are fully covered.
 

@@ -1,39 +1,36 @@
 # list-linked-doubly
 
 ## Overview
-A doubly linked list stores nodes with both `prev` and `next` links.
+A doubly linked list stores each node with both previous and next links.
 
-It supports efficient insert/delete at both ends and around known nodes.
+In this repository, the implementation must use an index-based node pool backed by arrays. Do not use slices, maps, or pointer-linked nodes.
+
+## Project contract
+- `PushFront(v)` and `PushBack(v)` both run in `O(1)` time.
+- `PopFront()` and `PopBack()` return `(zero, false)` when the list is empty.
+- `Values()` yields values from head to tail.
+- The empty state uses the nil sentinel for both head and tail.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You need frequent inserts/removes at both ends.
-- You need bidirectional traversal.
+- You need efficient updates at both ends.
+- You need links in both directions.
 
 ## When not to use
 - You need fast random access by index.
-- You need compact memory usage.
-
-## Pros and cons
-- Pros: efficient local edits, supports forward/backward traversal.
-- Cons: extra pointer/index overhead, cache locality worse than arrays.
+- You want the most compact memory layout.
 
 ## Complexity
-- `PushFront/PushBack`: `O(1)`
-- `PopFront/PopBack`: `O(1)`
-- `Insert/Delete` at known node: `O(1)`
-- `Find`: `O(n)`
+- `PushFront(v)`: `O(1)`
+- `PushBack(v)`: `O(1)`
+- `PopFront()`: `O(1)`
+- `PopBack()`: `O(1)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `container/list` (stdlib) is widely used.
-- `github.com/emirpasic/gods/lists/doublylinkedlist`
-- `github.com/zyedidia/generic/list`
-
-## Stdlib (Go 1.25+)
-- `container/list` implements a doubly linked list.
-
-## Language Built-ins
-- No built-in linked-list type.
+## Implementation notes
+- Track the head index, tail index, free-list head, and length.
+- Use `-1` as the nil sentinel index.
+- Keep `prev` and `next` links consistent in both directions.
 
 ## Implementation Rules
 - Read and follow `list-linked-doubly/RULES.md` before writing code.

@@ -1,37 +1,37 @@
 # list-skip
 
 ## Overview
-A skip list is an ordered structure built from multiple linked levels. Higher levels skip over elements to speed up search.
+A skip list is an ordered structure built from multiple forward-link levels. Higher levels skip over many values, which gives expected logarithmic search, insert, and delete.
 
-It is often used as a simpler alternative to balanced trees for ordered maps/sets.
+In this repository, it is a set-like structure: values are unique. The implementation must use array-backed index pools only.
+
+## Project contract
+- `New(maxLevel, cmp)` creates an empty skip list. A `maxLevel` less than `1` is normalized to `1`.
+- The comparator defines sorted order.
+- Duplicate values are not stored. `Insert(v)` returns `false` when the value already exists.
+- `Delete(v)` returns `false` when the value is missing.
+- `Values()` yields values in sorted order by traversing level `0`.
+- Level generation is deterministic for tests. The same operation sequence must produce the same levels.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You need ordered operations with expected logarithmic performance.
-- You want a probabilistic balancing approach.
+- You need ordered set behavior with expected `O(log n)` updates.
+- You want simpler balancing rules than tree rotations.
 
 ## When not to use
 - You need strict worst-case balancing guarantees.
-- You need very compact memory layout.
+- You need minimal per-element overhead.
 
-## Pros and cons
-- Pros: conceptually simpler balancing than tree rotations, good expected performance.
-- Cons: probabilistic behavior, pointer/index overhead across levels.
+## Complexity
+- `Has(v)`: expected `O(log n)`
+- `Insert(v)`: expected `O(log n)`
+- `Delete(v)`: expected `O(log n)`
+- Space: `O(n)` on average
 
-## Complexity (expected)
-- Search: `O(log n)`
-- Insert: `O(log n)`
-- Delete: `O(log n)`
-- Space: `O(n)` average
-
-## Popular Go Libraries
-- `github.com/huandu/skiplist` - popular skip list ordered map implementation.
-- `github.com/Workiva/go-datastructures` includes skip list package.
-
-## Stdlib (Go 1.25+)
-- No skip list in stdlib.
-
-## Language Built-ins
-- No built-in skip-list type.
+## Implementation notes
+- Use a head sentinel node and `-1` as the nil sentinel index.
+- Track `currentLevel`, length, free-list head, and deterministic RNG state.
+- Reduce `currentLevel` after deletions when upper levels become empty.
 
 ## Implementation Rules
 - Read and follow `list-skip/RULES.md` before writing code.

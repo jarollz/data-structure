@@ -11,28 +11,32 @@ Implement a generic ordered skip list.
 ## Generics and ordering
 - [ ] Use `T any`.
 - [ ] Require comparator for ordering.
-- [ ] Define duplicate policy clearly (recommended: allow replace or disallow duplicates).
+- [ ] Duplicate policy: do not store duplicates. `Insert(v)` returns `false` when equal value already exists.
 
 ## Required API
-- [ ] `New(maxLevel int, cmp func(a, b T) int) *SkipList[T]`
-- [ ] `Insert(v T) bool`
-- [ ] `Delete(v T) bool`
+- [ ] `New(maxLevel int, cmp func(a, b T) int) *SkipList[T]` creates an empty skip list. Normalize `maxLevel < 1` to `1`.
+- [ ] `Insert(v T) bool` inserts new value and returns `true`; return `false` on duplicate.
+- [ ] `Delete(v T) bool` removes existing value and returns `true`; return `false` when value is missing.
 - [ ] `Has(v T) bool`
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `Values() iter.Seq[T]`
 
 ## Internal representation
+- [ ] Use an index-based node pool with `-1` as nil/sentinel index.
+- [ ] Keep head sentinel node with forward references for all levels `0..maxLevel-1`.
 - [ ] Node stores value and forward references for each level.
 - [ ] Level references use arrays/indexes only.
-- [ ] Define level-generation policy and keep it deterministic enough for tests.
+- [ ] Track `currentLevel`, length, free-list head, and deterministic RNG state.
+- [ ] Level generation policy is fixed: initialize internal xorshift32 state to `1` in `New`; on each insert, advance state and promote while low bit is `1`, stopping at first `0` or `maxLevel`. Same operation sequence must produce same levels.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node/link fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Optional free-list reuse is allowed if skip-list invariants remain valid.
-- [ ] Optional dynamic current-level reduction is allowed after heavy deletions.
+- [ ] After deletions, reduce `currentLevel` while highest level has no live nodes.
 
 ## Invariants
 - [ ] Level 0 contains all live elements in sorted order.

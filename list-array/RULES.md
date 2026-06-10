@@ -12,28 +12,30 @@ Implement a generic array-backed list with index operations.
 - [ ] Use `T any` for element type.
 
 ## Required API
-- [ ] `New(capacity int) *List[T]`
-- [ ] `Append(v T) bool`
+- [ ] `New(capacity int) *List[T]` creates an empty list. Normalize `capacity <= 0` to `16`. Effective starting capacity is `max(16, capacity)`.
+- [ ] `Append(v T) bool` appends at tail and always returns `true`.
 - [ ] `Get(i int) (T, bool)`
-- [ ] `Set(i int, v T) bool`
-- [ ] `Insert(i int, v T) bool`
-- [ ] `Delete(i int) (T, bool)`
+- [ ] `Set(i int, v T) bool` updates existing element and returns `false` when `i` is outside `[0, Len())`.
+- [ ] `Insert(i int, v T) bool` inserts before index `i`. Valid indexes are `[0, Len()]`. Return `false` when `i` is outside that range.
+- [ ] `Delete(i int) (T, bool)` removes and returns element at index `i`. Return `(zero, false)` when `i` is outside `[0, Len())`.
 - [ ] `Len() int`
 - [ ] `Cap() int`
 - [ ] `Clear()`
 - [ ] `Values() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Fixed-capacity array plus length counter.
-- [ ] If growth is implemented, allocate new larger array and copy manually.
+- [ ] Contiguous backing storage plus explicit length and capacity fields.
+- [ ] Backing storage always keeps live elements in indexes `[0, Len())` with no gaps.
+- [ ] On grow or shrink, allocate new backing storage and copy live elements manually in index order.
 - [ ] Shift elements for middle insert/delete.
 
 ## Auto-resize policy
+- [ ] `Cap()` immediately after `New` equals normalized starting capacity.
 - [ ] Grow when `Len() == Cap()`.
 - [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
 - [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
 - [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
-- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] `minCap` is normalized starting capacity.
 - [ ] Use hysteresis; do not resize on every delete.
 
 ## Invariants
@@ -51,6 +53,7 @@ Implement a generic array-backed list with index operations.
 ## Edge cases
 - [ ] Negative index and `i >= Len()` are handled safely.
 - [ ] Insert at head and tail works.
+- [ ] Insert at `i == Len()` appends.
 - [ ] Delete head and tail works.
 - [ ] Clear resets length state.
 

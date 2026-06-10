@@ -16,24 +16,27 @@ Implement an ordered map `K -> V` on top of an AVL tree.
 
 ## Required API
 - [ ] `New(cmp func(a, b K) int) *Map[K, V]`
-- [ ] `Put(key K, value V)`
+- [ ] `Put(key K, value V)` inserts or overwrites. Overwrite does not change `Len()`.
 - [ ] `Get(key K) (V, bool)`
 - [ ] `Delete(key K) bool`
 - [ ] `Has(key K) bool`
-- [ ] `Min() (K, V, bool)`
-- [ ] `Max() (K, V, bool)`
+- [ ] `Min() (K, V, bool)` returns `(zeroK, zeroV, false)` on empty map.
+- [ ] `Max() (K, V, bool)` returns `(zeroK, zeroV, false)` on empty map.
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `All() iter.Seq2[K, V]`
 
 ## Internal representation
 - [ ] Store nodes in arrays by index (no slices/maps).
+- [ ] Use `-1` as the nil/sentinel index and track root index explicitly.
 - [ ] Track `left`, `right`, and `height` (or balance factor) per node.
+- [ ] Store keys and values in arrays keyed by node index.
 - [ ] Keep free-list for node reuse.
 - [ ] Rebalance with AVL rotations after insert/delete.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Free-list reuse is recommended to reduce allocation churn.
@@ -54,6 +57,7 @@ Implement an ordered map `K -> V` on top of an AVL tree.
 ## Edge cases
 - [ ] Delete from empty map.
 - [ ] Insert duplicate key updates value.
+- [ ] Delete missing key returns `false`.
 - [ ] Delete root with 0, 1, and 2 children.
 - [ ] Rebalance on LL, RR, LR, RL cases.
 

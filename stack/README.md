@@ -1,38 +1,37 @@
 # stack
 
 ## Overview
-A stack is a LIFO (last-in, first-out) structure.
+A stack is a LIFO data structure: the last value pushed is the first value popped.
 
-Typical operations are push, pop, and peek top.
+In this repository, the implementation must use array-backed storage only. Do not use slices or maps in the implementation.
+
+## Project contract
+- `New(capacity int)` creates an empty stack. A capacity less than or equal to `0` is normalized to `16`.
+- The stack grows and shrinks internally. Callers do not manage resizing directly.
+- `Push(v)` always returns `true`.
+- `Pop()` and `PeekTop()` return `(zero, false)` when the stack is empty.
+- The top element is the element at index `Len()-1`.
+- `Values()` yields values from top to bottom.
+- Mutation during iteration is not safe.
 
 ## When to use
 - You need reverse-order processing.
-- You model call stacks, undo history, or DFS traversal.
+- You are modeling DFS, undo, or call-stack style work.
 
 ## When not to use
-- You need FIFO processing (use queue).
-- You need access by arbitrary key or index.
-
-## Pros and cons
-- Pros: very simple API, efficient top operations.
-- Cons: no direct access to middle elements.
+- You need FIFO behavior.
+- You need efficient access to middle elements.
 
 ## Complexity
-- `Push`: `O(1)`
-- `Pop`: `O(1)`
-- `PeekTop`: `O(1)`
+- `Push(v)`: amortized `O(1)`
+- `Pop()`: amortized `O(1)`
+- `PeekTop()`: `O(1)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/zyedidia/generic/stack`
-- `github.com/emirpasic/gods/stacks/arraystack` and `.../linkedliststack`
-- `github.com/golang-collections/collections/stack` (older library)
-
-## Stdlib (Go 1.25+)
-- No dedicated stack package.
-
-## Language Built-ins
-- No built-in stack type.
+## Implementation notes
+- Keep live elements in backing-storage indexes `[0, Len())`.
+- Grow by allocating new storage and copying values manually.
+- Shrink with hysteresis after enough pops.
 
 ## Implementation Rules
 - Read and follow `stack/RULES.md` before writing code.

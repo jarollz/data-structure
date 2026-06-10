@@ -12,8 +12,8 @@ Implement a generic LIFO stack.
 - [ ] Use `T any`.
 
 ## Required API
-- [ ] `New(capacity int) *Stack[T]`
-- [ ] `Push(v T) bool`
+- [ ] `New(capacity int) *Stack[T]` creates an empty stack. Normalize `capacity <= 0` to `16`. Effective starting capacity is `max(16, capacity)`.
+- [ ] `Push(v T) bool` pushes on top and always returns `true`.
 - [ ] `Pop() (T, bool)`
 - [ ] `PeekTop() (T, bool)`
 - [ ] `Len() int`
@@ -22,15 +22,16 @@ Implement a generic LIFO stack.
 - [ ] `Values() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Array-backed storage with top index.
-- [ ] Define overflow behavior (fail or grow by new array copy).
+- [ ] Array-backed storage with explicit length. Top element is at index `Len()-1`.
+- [ ] When full, grow by allocating new backing storage and copying live elements in order.
 
 ## Auto-resize policy
+- [ ] `Cap()` immediately after `New` equals normalized starting capacity.
 - [ ] Grow when `Len() == Cap()`.
 - [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
 - [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
 - [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
-- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] `minCap` is normalized starting capacity.
 - [ ] Use hysteresis; do not resize on every pop.
 
 ## Invariants
@@ -47,7 +48,7 @@ Implement a generic LIFO stack.
 
 ## Edge cases
 - [ ] Pop/peek on empty returns `(zero, false)`.
-- [ ] Push at full capacity follows documented policy.
+- [ ] Push at full capacity grows backing storage and still returns `true`.
 - [ ] Clear resets stack state.
 
 ## Test checklist

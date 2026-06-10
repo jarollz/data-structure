@@ -1,43 +1,38 @@
 # map-hash
 
 ## Overview
-A hash map stores key-value pairs and targets very fast lookup by key.
+A hash map stores key-value pairs and targets very fast average lookup by key.
 
-This learning implementation does not use Go's built-in `map`. You implement hashing, probing, deletion, and resizing directly.
+In this repository, the implementation uses open addressing with linear probing and tombstones. Do not use Go's built-in `map` in the implementation.
 
-This folder uses open addressing with linear probing.
+## Project contract
+- `New(capacity, hash, equal)` creates an empty map. A capacity less than or equal to `0` is normalized to `16`.
+- The caller provides `hash func(K) uint64` and `equal func(a, b K) bool`.
+- `Put(key, value)` inserts a new key or overwrites an existing key.
+- `Delete(key)` returns `false` when the key is missing.
+- `LoadFactor()` is `Len()/Cap()` and does not count tombstones.
+- Iteration order from `All()` is unspecified.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You need fast average `Get`/`Put`/`Delete`.
+- You need fast average `Get`, `Put`, and `Delete` operations.
 - You do not need sorted key order.
-- You want direct control over load factor and resize behavior.
 
 ## When not to use
-- You need sorted iteration or range queries.
-- You need strict worst-case `O(log n)` guarantees.
-
-## Pros and cons
-- Pros: very fast average access, cache-friendly array layout, simple memory model.
-- Cons: delete logic needs tombstones, clustering can hurt performance, worst case is `O(n)`.
+- You need ordered iteration or range-style queries.
+- You need strict worst-case logarithmic behavior.
 
 ## Complexity
-- `Get`: average `O(1)`, worst `O(n)`
-- `Put`: average `O(1)`, worst `O(n)`
-- `Delete`: average `O(1)`, worst `O(n)`
+- `Get(key)`: average `O(1)`, worst `O(n)`
+- `Put(key, value)`: average `O(1)`, worst `O(n)`
+- `Delete(key)`: average `O(1)`, worst `O(n)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/cornelk/hashmap` - lock-free/thread-safe map focused on read performance.
-- `github.com/orcaman/concurrent-map/v2` - sharded concurrent map for practical service workloads.
-- `github.com/zyedidia/generic/hashmap` - generic hashmap with linear probing.
-
-## Stdlib (Go 1.25+)
-- No low-level hash table package for custom probing logic.
-- `sync.Map` exists for specific concurrent access patterns.
-
-## Language Built-ins
-- Built-in `map[K]V` provides hash-map behavior directly.
-- This project forbids using built-in `map` in your own implementation.
+## Implementation notes
+- Use an array of slots with explicit states: empty, occupied, and deleted.
+- Reuse tombstones carefully so probe chains remain correct.
+- Grow based on probe occupancy, not only live load factor.
+- `Clear()` removes live entries and tombstones and resets capacity to the minimum configured capacity.
 
 ## Implementation Rules
 - Read and follow `map-hash/RULES.md` before writing code.

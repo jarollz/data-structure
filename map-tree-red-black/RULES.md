@@ -15,24 +15,27 @@ Implement an ordered map `K -> V` using a red-black tree.
 
 ## Required API
 - [ ] `New(cmp func(a, b K) int) *Map[K, V]`
-- [ ] `Put(key K, value V)`
+- [ ] `Put(key K, value V)` inserts or overwrites. Overwrite does not change `Len()`.
 - [ ] `Get(key K) (V, bool)`
 - [ ] `Delete(key K) bool`
 - [ ] `Has(key K) bool`
-- [ ] `Min() (K, V, bool)`
-- [ ] `Max() (K, V, bool)`
+- [ ] `Min() (K, V, bool)` returns `(zeroK, zeroV, false)` on empty map.
+- [ ] `Max() (K, V, bool)` returns `(zeroK, zeroV, false)` on empty map.
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `All() iter.Seq2[K, V]`
 
 ## Internal representation
-- [ ] Array-backed nodes with indexes.
+- [ ] Array-backed nodes with indexes and `-1` as nil/sentinel.
+- [ ] Track root index explicitly.
 - [ ] Store `left`, `right`, `parent`, and `color` per node.
+- [ ] Store keys and values in arrays keyed by node index.
 - [ ] Use free-list for node reuse.
 - [ ] Apply red-black insert and delete fix-up rules.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Free-list reuse is recommended to reduce allocation churn.
@@ -56,6 +59,7 @@ Implement an ordered map `K -> V` using a red-black tree.
 - [ ] Delete root in all child-count cases.
 - [ ] Delete node with black sibling scenarios.
 - [ ] Insert duplicate key updates value only.
+- [ ] Delete missing key returns `false`.
 
 ## Test checklist
 - [ ] API behavior tests.

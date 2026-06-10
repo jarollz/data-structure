@@ -15,22 +15,25 @@ Implement a set-like AVL tree for values of type `T`.
 
 ## Required API
 - [ ] `New(cmp func(a, b T) int) *Tree[T]`
-- [ ] `Insert(v T) bool`
-- [ ] `Delete(v T) bool`
+- [ ] `Insert(v T) bool` inserts new value and returns `true`; return `false` when equal value already exists.
+- [ ] `Delete(v T) bool` removes existing value and returns `true`; return `false` when value is missing.
 - [ ] `Has(v T) bool`
-- [ ] `Min() (T, bool)`
-- [ ] `Max() (T, bool)`
+- [ ] `Min() (T, bool)` returns `(zero, false)` on empty tree.
+- [ ] `Max() (T, bool)` returns `(zero, false)` on empty tree.
 - [ ] `Len() int`
 - [ ] `Clear()`
 - [ ] `InOrder() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Node arrays with child references and height/balance data.
+- [ ] Use an index-based node pool; do not use pointer-linked nodes.
+- [ ] Use `-1` as the nil/sentinel index and track root index explicitly.
+- [ ] Store child indexes and height/balance data in arrays keyed by node index.
 - [ ] Free-list for reusable node slots.
 - [ ] AVL rotations for rebalance.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Free-list reuse is recommended to reduce allocation churn.
@@ -50,6 +53,7 @@ Implement a set-like AVL tree for values of type `T`.
 
 ## Edge cases
 - [ ] Insert/delete on empty tree.
+- [ ] Duplicate insert returns `false` and leaves tree unchanged.
 - [ ] Delete root with 0, 1, 2 children.
 - [ ] All four rotation patterns are covered.
 

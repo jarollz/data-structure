@@ -12,8 +12,8 @@ Implement a generic FIFO queue.
 - [ ] Use `T any`.
 
 ## Required API
-- [ ] `New(capacity int) *Queue[T]`
-- [ ] `Enqueue(v T) bool`
+- [ ] `New(capacity int) *Queue[T]` creates an empty queue. Normalize `capacity <= 0` to `16`. Effective starting capacity is `max(16, capacity)`.
+- [ ] `Enqueue(v T) bool` adds to back and always returns `true`.
 - [ ] `Dequeue() (T, bool)`
 - [ ] `PeekFront() (T, bool)`
 - [ ] `Len() int`
@@ -23,15 +23,16 @@ Implement a generic FIFO queue.
 
 ## Internal representation
 - [ ] Recommended: circular buffer using array.
-- [ ] Track head index, tail index, and size.
+- [ ] Track head index and size. Tail may be stored explicitly or derived as `(head + size) % capacity`.
 - [ ] Wrap indices correctly.
 
 ## Auto-resize policy
+- [ ] `Cap()` immediately after `New` equals normalized starting capacity.
 - [ ] Grow when `Len() == Cap()`.
 - [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
 - [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
 - [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
-- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] `minCap` is normalized starting capacity.
 - [ ] On resize, re-pack logical order front-to-back into new array.
 - [ ] Use hysteresis; do not resize on every dequeue.
 
@@ -49,7 +50,7 @@ Implement a generic FIFO queue.
 
 ## Edge cases
 - [ ] Dequeue/peek on empty returns `(zero, false)`.
-- [ ] Full-capacity behavior is clearly defined.
+- [ ] Full-capacity behavior: grow first, then write. `Enqueue` does not fail for capacity reasons.
 - [ ] Wrap-around enqueue/dequeue remains correct.
 
 ## Test checklist

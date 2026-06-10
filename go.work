@@ -1,0 +1,17 @@
+go 1.25.8
+
+use (
+	./heap
+	./list-array
+	./list-linked-doubly
+	./list-linked-singly
+	./list-skip
+	./map-hash
+	./map-tree-avl
+	./map-tree-red-black
+	./queue
+	./stack
+	./tree-avl
+	./tree-general
+	./tree-red-black
+)

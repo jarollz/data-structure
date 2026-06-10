@@ -13,8 +13,8 @@ Implement a generic doubly linked list.
 
 ## Required API
 - [ ] `New() *List[T]`
-- [ ] `PushFront(v T)`
-- [ ] `PushBack(v T)`
+- [ ] `PushFront(v T)` runs in `O(1)` time.
+- [ ] `PushBack(v T)` runs in `O(1)` time.
 - [ ] `PopFront() (T, bool)`
 - [ ] `PopBack() (T, bool)`
 - [ ] `Len() int`
@@ -22,12 +22,14 @@ Implement a generic doubly linked list.
 - [ ] `Values() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Node contains value, prev, and next.
-- [ ] Track head and tail.
+- [ ] Use an index-based node pool. Each live node has value, `prev`, and `next` indexes.
+- [ ] Use `-1` as the nil/sentinel index.
+- [ ] Track head, tail, free-list head, and length.
 - [ ] Keep length counter.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When free-list is empty, allocate larger node-pool arrays and copy node fields by index.
 - [ ] Allocate node storage on insert operations.
 - [ ] Reclaim node storage on delete/clear operations.
 - [ ] Optional free-list reuse is allowed if list invariants remain valid.
@@ -49,6 +51,7 @@ Implement a generic doubly linked list.
 - [ ] Empty and single-node transitions are correct.
 - [ ] Pop on empty returns `(zero, false)`.
 - [ ] Clear resets all structural fields.
+- [ ] After removing last node, both head and tail become `-1`.
 
 ## Test checklist
 - [ ] Prev/next consistency tests.

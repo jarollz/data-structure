@@ -13,8 +13,8 @@ Implement a generic binary heap using arrays only.
 - [ ] Require comparator to define min-heap or max-heap behavior.
 
 ## Required API
-- [ ] `New(capacity int, cmp func(a, b T) int) *Heap[T]`
-- [ ] `Push(v T) bool`
+- [ ] `New(capacity int, cmp func(a, b T) int) *Heap[T]` creates an empty heap. Normalize `capacity <= 0` to `16`. Effective starting capacity is `max(16, capacity)`.
+- [ ] `Push(v T) bool` inserts `v`, restores heap order, and always returns `true`.
 - [ ] `PopTop() (T, bool)`
 - [ ] `PeekTop() (T, bool)`
 - [ ] `Len() int`
@@ -24,15 +24,16 @@ Implement a generic binary heap using arrays only.
 
 ## Internal representation
 - [ ] Array-backed complete tree by index.
-- [ ] Parent/child index formulas are correct.
+- [ ] Parent/child index formulas are: parent `(i-1)/2`, left child `2*i+1`, right child `2*i+2`.
 - [ ] Use sift-up and sift-down to restore heap property.
 
 ## Auto-resize policy
+- [ ] `Cap()` immediately after `New` equals normalized starting capacity.
 - [ ] Grow when `Len() == Cap()`.
 - [ ] New capacity on grow: `2x` when `Cap() < 1024`, otherwise `Cap() + Cap()/2`.
 - [ ] Shrink when `Len() <= Cap()/4` and `Cap() > minCap`.
 - [ ] New capacity on shrink: `max(minCap, Cap()/2, 2*Len())`.
-- [ ] `minCap` is `max(16, initial capacity)`.
+- [ ] `minCap` is normalized starting capacity.
 - [ ] Resize only backing array; heap-order invariants must remain valid.
 - [ ] Use hysteresis; do not resize on every `PopTop`.
 
@@ -49,7 +50,7 @@ Implement a generic binary heap using arrays only.
 - [ ] Mutation during iteration is not safe.
 
 ## Edge cases
-- [ ] Push into full capacity behavior is defined.
+- [ ] Push into full capacity grows backing storage and still returns `true`.
 - [ ] Pop/peek on empty heap returns `(zero, false)`.
 - [ ] Repeated equal-priority values handled correctly.
 

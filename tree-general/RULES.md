@@ -12,27 +12,29 @@ Implement a generic n-ary tree for hierarchical data.
 - [ ] Use `T any` for node value.
 
 ## Required API
-- [ ] `New(rootValue T) *Tree[T]`
-- [ ] `AddChild(parentID int, value T) (childID int, ok bool)`
-- [ ] `RemoveSubtree(nodeID int) bool`
-- [ ] `Get(nodeID int) (T, bool)`
-- [ ] `Parent(nodeID int) (int, bool)`
-- [ ] `ChildCount(nodeID int) int`
+- [ ] `New(rootValue T) *Tree[T]` creates a tree with one root node. Root node ID is always `0`.
+- [ ] `AddChild(parentID int, value T) (childID int, ok bool)` adds new last child of `parentID`. Return `(-1, false)` when `parentID` is invalid or tree is empty.
+- [ ] `RemoveSubtree(nodeID int) bool` removes `nodeID` and all descendants. Return `false` for invalid IDs. If `nodeID == 0`, whole tree becomes empty.
+- [ ] `Get(nodeID int) (T, bool)` returns `(zero, false)` for invalid or removed IDs.
+- [ ] `Parent(nodeID int) (int, bool)` returns `(-1, false)` for root, invalid, or removed IDs.
+- [ ] `ChildCount(nodeID int) int` returns number of live direct children, or `-1` for invalid or removed IDs.
 - [ ] `Len() int`
 - [ ] `PreOrder() iter.Seq[T]`
 
 ## Internal representation
-- [ ] Define stable node identity (index or ID).
-- [ ] Store parent reference/index.
-- [ ] Store child links with array-only strategy.
+- [ ] Node IDs are stable, start at `0`, increase monotonically, and are never reused.
+- [ ] Use index/ID-based storage only; do not use pointer-linked nodes.
+- [ ] Store `parent`, `firstChild`, `nextSibling`, and `prevSibling` indexes.
+- [ ] Use `-1` as the nil/sentinel index.
 
 ## Auto-resize policy
 - [ ] No capacity-based `Grow()` or `Shrink()` API.
+- [ ] When node arrays are full, allocate larger arrays and copy node fields by ID.
 - [ ] Allocate node storage on `AddChild`.
-- [ ] Reclaim node storage on `RemoveSubtree`.
-- [ ] Optional free-list reuse is allowed if tree invariants remain valid.
+- [ ] `RemoveSubtree` marks removed nodes dead but does not reuse their public IDs.
 
 ## Invariants
+- [ ] Root ID is `0` whenever tree is non-empty.
 - [ ] Exactly one root exists while tree is non-empty.
 - [ ] Non-root nodes have exactly one parent.
 - [ ] No cycles.
@@ -42,11 +44,11 @@ Implement a generic n-ary tree for hierarchical data.
 - [ ] `PreOrder()` yields parent before its children.
 - [ ] Each live node is yielded exactly once.
 - [ ] Early stop works when `yield` returns `false`.
-- [ ] Empty tree yields nothing and does not panic.
+- [ ] Empty tree yields nothing and does not panic. This includes tree after removing root.
 - [ ] Mutation during iteration is not safe.
 
 ## Edge cases
-- [ ] Remove root behavior is explicitly defined.
+- [ ] `RemoveSubtree(0)` removes entire tree and leaves it empty.
 - [ ] Invalid node IDs are handled safely.
 - [ ] Add/remove around leaves works correctly.
 

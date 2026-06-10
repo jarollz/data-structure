@@ -1,39 +1,36 @@
 # queue
 
 ## Overview
-A queue is a FIFO (first-in, first-out) structure.
+A queue is a FIFO data structure: the first value enqueued is the first value dequeued.
 
-Typical operations are enqueue at the back and dequeue from the front.
+In this repository, the implementation must use an array-backed circular buffer. Do not use slices or maps in the implementation.
+
+## Project contract
+- `New(capacity int)` creates an empty queue. A capacity less than or equal to `0` is normalized to `16`.
+- The queue grows and shrinks internally. Callers do not manage resizing directly.
+- `Enqueue(v)` adds a value at the back and always returns `true`.
+- `Dequeue()` and `PeekFront()` return `(zero, false)` when the queue is empty.
+- `Values()` yields values from front to back.
+- Mutation during iteration is not safe.
 
 ## When to use
 - You need processing in arrival order.
-- You model buffers, jobs, or breadth-first traversal.
+- You are modeling buffers, jobs, or breadth-first traversal.
 
 ## When not to use
-- You need LIFO behavior (use stack).
-- You need priority ordering (use heap/priority queue).
-
-## Pros and cons
-- Pros: natural FIFO semantics, simple API.
-- Cons: implementation details matter for performance (ring buffer vs linked list).
+- You need LIFO behavior.
+- You need priority ordering.
 
 ## Complexity
-- Enqueue: `O(1)`
-- Dequeue: `O(1)`
-- PeekFront: `O(1)`
+- `Enqueue(v)`: amortized `O(1)`
+- `Dequeue()`: amortized `O(1)`
+- `PeekFront()`: `O(1)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/eapache/queue` - fast ring-buffer queue.
-- `github.com/gammazero/deque` - deque that supports queue usage.
-- `github.com/emirpasic/gods/queues/arrayqueue` and `.../linkedlistqueue`.
-
-## Stdlib (Go 1.25+)
-- No dedicated queue package.
-- Common building blocks: `container/list`, `container/ring`.
-
-## Language Built-ins
-- No built-in queue type.
+## Implementation notes
+- Use circular-buffer indexing.
+- Track the head index and size. The tail may be stored or derived.
+- On resize, repack values in logical front-to-back order.
 
 ## Implementation Rules
 - Read and follow `queue/RULES.md` before writing code.

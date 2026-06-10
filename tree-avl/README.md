@@ -3,37 +3,37 @@
 ## Overview
 An AVL tree is a self-balancing binary search tree.
 
-This folder is set-like tree behavior (single value `T`), not key-value map behavior.
+This folder is set-like: it stores unique values of type `T`, not key-value pairs.
+
+## Project contract
+- `New(cmp)` creates an empty tree.
+- The comparator defines sorted order.
+- Duplicate values are not stored. `Insert(v)` returns `false` when the value already exists.
+- `Delete(v)` returns `false` when the value is missing.
+- `Min()` and `Max()` return `(zero, false)` when the tree is empty.
+- `InOrder()` yields values in ascending order.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You need sorted set operations.
-- You need strict balance and strong lookup performance.
+- You need ordered set behavior.
+- You want strict balance with logarithmic lookup and update costs.
 
 ## When not to use
-- You need key-value map semantics (use `map-tree-avl`).
-- You need fastest average exact lookup without ordering (use hash map).
-
-## Pros and cons
-- Pros: strict height balance, predictable `O(log n)`.
-- Cons: more rotations than red-black in some update workloads.
+- You need key-value map behavior.
+- You only need the fastest average exact lookup without order.
 
 ## Complexity
-- `Insert`: `O(log n)`
-- `Delete`: `O(log n)`
-- `Has`: `O(log n)`
-- In-order traversal: `O(n)`
+- `Insert(v)`: `O(log n)`
+- `Delete(v)`: `O(log n)`
+- `Has(v)`: `O(log n)`
+- `Min()` and `Max()`: `O(log n)`
+- `InOrder()`: `O(n)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/zyedidia/generic/avl`
-- `github.com/emirpasic/gods/trees/avltree`
-- `github.com/Workiva/go-datastructures/tree/avl`
-
-## Stdlib (Go 1.25+)
-- No AVL tree in stdlib.
-
-## Language Built-ins
-- No built-in balanced tree type.
+## Implementation notes
+- Use an index-based node pool backed by arrays.
+- Use `-1` as the nil sentinel index and track the root explicitly.
+- Maintain BST ordering, correct heights, and balance factors in `[-1, 1]`.
 
 ## Implementation Rules
 - Read and follow `tree-avl/RULES.md` before writing code.

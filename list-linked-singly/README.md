@@ -1,38 +1,37 @@
 # list-linked-singly
 
 ## Overview
-A singly linked list stores elements in nodes where each node points to the next node.
+A singly linked list stores each element in a node that points to the next node.
 
-It supports efficient inserts/removes near the head, but random indexing is slow.
+In this repository, the implementation must use an index-based node pool backed by arrays. Do not use slices, maps, or pointer-linked nodes.
+
+## Project contract
+- `PushFront(v)` adds a value at the head.
+- `PopFront()` returns `(zero, false)` when the list is empty.
+- `Append(v)` appends at the tail in `O(1)` time.
+- `DeleteFirst(match)` removes the first value that matches and returns `false` when no match exists.
+- `Values()` yields values from head to tail.
+- Mutation during iteration is not safe.
 
 ## When to use
-- You need frequent head inserts/removes.
-- You do not need fast random access.
+- You need frequent inserts and removals at the head.
+- You only need forward traversal.
 
 ## When not to use
-- You need fast index lookup.
-- You need reverse traversal without extra work.
-
-## Pros and cons
-- Pros: simple node model, no large contiguous memory required.
-- Cons: `O(n)` indexing/search, pointer chasing hurts cache locality.
+- You need fast random access by index.
+- You need reverse traversal.
 
 ## Complexity
-- `PushFront`: `O(1)`
-- `PopFront`: `O(1)`
-- `Append`: `O(1)` with tail pointer, else `O(n)`
-- `Find`: `O(n)`
+- `PushFront(v)`: `O(1)`
+- `PopFront()`: `O(1)`
+- `Append(v)`: `O(1)`
+- `DeleteFirst(match)`: `O(n)`
 - Space: `O(n)`
 
-## Popular Go Libraries
-- `github.com/emirpasic/gods/lists/singlylinkedlist`
-- `github.com/golang-collections/collections` (older collection implementations)
-
-## Stdlib (Go 1.25+)
-- No dedicated singly linked list in stdlib.
-
-## Language Built-ins
-- No built-in linked-list type.
+## Implementation notes
+- Track the head index, tail index, free-list head, and length.
+- Use `-1` as the nil sentinel index.
+- When the node pool is full, allocate larger arrays and copy node fields by index.
 
 ## Implementation Rules
 - Read and follow `list-linked-singly/RULES.md` before writing code.
