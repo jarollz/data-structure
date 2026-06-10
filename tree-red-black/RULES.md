@@ -1,0 +1,72 @@
+# RULES.md - tree-red-black
+
+## Goal
+Implement a set-like red-black tree for values of type `T`.
+
+## Hard constraints
+- [ ] Use only simple Go types and arrays for internal storage.
+- [ ] Do not use `slice` in implementation code.
+- [ ] Do not use `map` in implementation code.
+
+## Generics and comparator
+- [ ] Use `T any`.
+- [ ] Require comparator `cmp(a, b T) int`.
+- [ ] Duplicate value policy: do not store duplicates.
+
+## Required API
+- [ ] `New(cmp func(a, b T) int) *Tree[T]`
+- [ ] `Insert(v T) bool`
+- [ ] `Delete(v T) bool`
+- [ ] `Has(v T) bool`
+- [ ] `Min() (T, bool)`
+- [ ] `Max() (T, bool)`
+- [ ] `Len() int`
+- [ ] `Clear()`
+- [ ] `InOrder() iter.Seq[T]`
+
+## Internal representation
+- [ ] Array-backed nodes with `left/right/parent/color`.
+- [ ] Free-list for reusable nodes.
+- [ ] Insert and delete fix-up routines maintain color properties.
+
+## Invariants
+- [ ] BST ordering holds.
+- [ ] Root is black.
+- [ ] Red node cannot have red child.
+- [ ] All root-to-leaf paths have equal black height.
+- [ ] `Len()` equals live node count.
+
+## Iterator contract
+- [ ] `InOrder()` yields ascending sorted values.
+- [ ] Each value is yielded exactly once.
+- [ ] Early stop works when `yield` returns `false`.
+- [ ] Empty tree yields nothing and does not panic.
+- [ ] Mutation during iteration is not safe.
+
+## Edge cases
+- [ ] Insert/delete on empty tree.
+- [ ] Delete root and near-root nodes.
+- [ ] Recolor and rotation branches are fully covered.
+
+## Test checklist
+- [ ] Property checks for all red-black rules.
+- [ ] Sorted-order traversal tests.
+- [ ] Random operations against reference set model.
+
+## Benchmark checklist
+- [ ] Insert benchmark.
+- [ ] Has benchmark.
+- [ ] Delete benchmark.
+- [ ] In-order traversal benchmark.
+
+## Test Generator Hints
+- Cover recolor and rotation paths for insert and delete fix-up.
+- Use randomized set operations with fixed seed and sorted oracle.
+- Validate root-black, no-red-red, and equal black-height properties.
+- Iterator tests must verify sorted in-order output and early stop.
+
+## AI Prompt Snippets
+- Unit tests: "Generate table-driven tests for set-like red-black tree API including duplicate insert policy, delete-root, and min/max behavior."
+- Property tests: "Generate randomized insert/delete/has with fixed seed and oracle set comparison, validating all red-black invariants after each mutation."
+- Iterator tests: "Generate tests for `InOrder() iter.Seq[T]` enforcing sorted order, exact count, early stop, and mutation-unsafety note."
+- Benchmarks: "Generate red-black set benchmarks for insert/has/delete and in-order traversal at 1e3/1e4/1e5 sizes."
