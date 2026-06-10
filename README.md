@@ -33,3 +33,11 @@ This is an evolving learning project; folder contents may change over time as im
 - Cross-folder contract summary: `STRUCTURE-CONTRACTS.md`
 - Agent working rules: `AGENTS.md`
 - Per-structure implementation rules: each folder `RULES.md`
+- Manual AI skill for grading implementations: `.agents/skills/assess-implementation/SKILL.md`
+
+## AI Assessment Skill
+
+Use `.agents/skills/assess-implementation/SKILL.md` to harshly grade each data structure implementation against repo rules and folder contracts.
+The skill is designed for manual use across AI agents and requires the assessment result to be shown as a markdown table in terminal and saved as a markdown report under `tmp/`.
+
+![Sample assess-implementation skill output](.assets/sample-assess-implementation-skill-output.png)
