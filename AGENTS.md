@@ -38,3 +38,11 @@ This file defines strict rules for AI/code agents working in this repository.
 - Do not weaken constraints in `RULES.md` unless explicitly requested.
 - If behavior is ambiguous, prefer stricter contracts and document assumptions.
 - Keep language plain and direct in all generated docs.
+
+## Tagging and versioning rules
+- MUST follow `RELEASING.md` for all release and tag decisions.
+- MUST use `<folder>/vX.Y.Z` for structure folder releases.
+- MUST treat root tag `vX.Y.Z` as invalid unless root `go.mod` exists.
+- MUST keep published release tags immutable (no move, rewrite, or force-update).
+- MUST publish a new version when fixing a bad release tag.
+- MUST ensure tag major version matches module path major in `go.mod` (`/vN` for `v2+`).

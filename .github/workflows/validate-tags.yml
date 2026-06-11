@@ -1,0 +1,64 @@
+name: Validate Tags
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag format and module major
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          echo "Validating tag: ${tag}"
+
+          if [[ "${tag}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            if [[ ! -f "go.mod" ]]; then
+              echo "Error: root tag '${tag}' invalid because root go.mod is missing."
+              exit 1
+            fi
+
+            major="${BASH_REMATCH[1]}"
+            module_path="$(awk '/^module /{print $2; exit}' go.mod)"
+          elif [[ "${tag}" =~ ^([^/]+)/v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            folder="${BASH_REMATCH[1]}"
+            major="${BASH_REMATCH[2]}"
+
+            if [[ ! -d "${folder}" ]]; then
+              echo "Error: tag folder '${folder}' does not exist."
+              exit 1
+            fi
+
+            if [[ ! -f "${folder}/go.mod" ]]; then
+              echo "Error: missing ${folder}/go.mod for tag '${tag}'."
+              exit 1
+            fi
+
+            module_path="$(awk '/^module /{print $2; exit}' "${folder}/go.mod")"
+          else
+            echo "Error: invalid tag format '${tag}'."
+            echo "Allowed: <folder>/vX.Y.Z (or vX.Y.Z only when root go.mod exists)."
+            exit 1
+          fi
+
+          module_major="$(sed -n 's#.*/v\([0-9][0-9]*\)$#\1#p' <<<"${module_path}")"
+          if [[ -z "${module_major}" ]]; then
+            module_major="1"
+          fi
+
+          if [[ "${major}" != "${module_major}" ]]; then
+            echo "Error: tag major v${major} does not match module path '${module_path}' (major v${module_major})."
+            exit 1
+          fi
+
+          echo "Tag valid for module path: ${module_path}"
