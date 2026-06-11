@@ -63,6 +63,20 @@ If more structure folders exist later, include them automatically when they cont
 - Multiple folders: `invoke the skill assess-implementation only for folders list-array, stack`
 - Multiple folders: `invoke the skill assess-implementation only for folders ./list-array, ./queue, tree-avl`
 
+## Bundled Resources And Reuse Policy
+
+- Persistent helper script path: `.agents/skills/assess-implementation/resources/assess_impl.py`
+- Helper docs path: `.agents/skills/assess-implementation/resources/README.md`
+- Reuse bundled helper for normal assessment and report generation.
+- Do not create ad-hoc Python scripts in random paths or `tmp/` for routine runs.
+- Temporary debug scripts are allowed only for parser debugging. Delete them immediately after debugging and state why they were needed.
+
+Preferred helper commands:
+
+- Whole repo: `python3 .agents/skills/assess-implementation/resources/assess_impl.py`
+- Scoped: `python3 .agents/skills/assess-implementation/resources/assess_impl.py --folders list-array stack`
+- No local command execution: `python3 .agents/skills/assess-implementation/resources/assess_impl.py --skip-commands`
+
 ## Evidence Rules
 
 - Read root `AGENTS.md` first.
@@ -148,11 +162,26 @@ Check implementation files only. Ignore test-only use of slices or maps.
 ### 8. Command Evidence
 
 - If implementation exists, run local verification commands when available.
-- For Go folders, prefer `go test` for that folder.
-- If benchmarks exist and runtime is reasonable, run a short benchmark smoke check.
+- Prefer Makefile tools over raw `go test` when available.
+- Strict-hard command mode uses per-folder commands for both whole-repo and scoped assessment: `make test-folder FOLDER=<folder>`, then optional `make bench-folder FOLDER=<folder>`.
+- If Makefile target is unavailable or broken, fallback to direct `go test` command for equivalent scope.
+- If benchmarks exist and runtime is reasonable, run benchmark smoke check.
 - Record exact command and result in report.
 - Command success does not override rule failures.
 - Command failure is evidence, not a blocker for finishing assessment.
+
+Strict-hard caps tied to command evidence:
+
+- If required test command fails or is missing, cap `Test evidence` at `4/20` and `Invariants and behavior` at `6/20`.
+- If required benchmark command fails or is missing, cap `Benchmark and delivery evidence` at `5/10`.
+- Missing command execution when implementation exists is treated as failed command evidence, not neutral.
+
+## RULES Parsing Discipline
+
+- Parse checklist items only from markdown checkbox bullets: `- [ ] ...`.
+- Parse required API names only from backticked signatures in `## Required API` section.
+- Do not treat prose tokens as API names. Ignore complexity markers and type terms such as `O(1)` and `float64(...)` unless they are part of explicit backticked API signature.
+- If parser confidence is low, mark evidence missing instead of guessing.
 
 ## Scoring Rubric
 
@@ -193,6 +222,10 @@ Produce both outputs in one run:
 1. Print compact markdown table to terminal.
 2. Write full markdown report to `tmp/assessment_YYYYMMDD_HHMMSS.md`.
 
+Terminal table output is mandatory. Do not consider assessment complete unless terminal shows the summary table rows.
+
+If command streaming hides or drops stdout table in agent view, recover by reading generated report and printing the `## Summary Table` block to terminal before finishing.
+
 In scoped mode, both outputs must contain only requested folders.
 
 Create `tmp/` first if missing.
@@ -230,6 +263,8 @@ Keep `Notes` brief, for example:
 - `uses slice`
 - `API missing, no benchmarks`
 - `tests weak, iterator unproven`
+
+When responding after assessment run, include this exact markdown table block in terminal-visible output. Do not replace with prose summary.
 
 ## Full Report Format
 
@@ -311,9 +346,11 @@ Suggest these only after completing repo-based grading. These are outside direct
 4. If scoped mode requested, deduplicate targets.
 5. If scoped mode requested, validate every target folder has `RULES.md`; otherwise stop with invalid-target message listing bad targets.
 6. If scoped mode not requested, enumerate structure folders from `*/RULES.md`.
-7. Inspect implementation, tests, benchmarks, README, and `RULES.md` for each selected folder only.
-8. Run cheap local verification commands when implementation exists.
-9. Compute checklist pass counts and rubric scores.
-10. Print markdown summary table to terminal.
-11. Write full markdown report to `tmp/assessment_YYYYMMDD_HHMMSS.md`.
-12. End with short list of human-only extra assessments.
+7. Run bundled helper script from `.agents/skills/assess-implementation/resources/assess_impl.py`.
+8. Run per-folder strict-hard command checks: `make test-folder FOLDER=<folder>` and optional `make bench-folder FOLDER=<folder>`.
+9. Apply strict-hard command-evidence score caps when required commands fail or are missing.
+10. Ensure parser uses strict checkbox and backticked-signature extraction rules.
+11. Print run metadata and markdown summary table to terminal.
+12. Write full markdown report to `tmp/assessment_YYYYMMDD_HHMMSS.md` including run metadata and cap reasons.
+13. Verify terminal output contains summary table header and at least one data row; if missing, print table recovered from report.
+14. End with short list of human-only extra assessments.

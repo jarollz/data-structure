@@ -40,4 +40,6 @@ This is an evolving learning project; folder contents may change over time as im
 Use `.agents/skills/assess-implementation/SKILL.md` to harshly grade each data structure implementation against repo rules and folder contracts.
 The skill is designed for manual use across AI agents and requires the assessment result to be shown as a markdown table in terminal and saved as a markdown report under `tmp/`.
 
+**Example Output**:
+
 ![Sample assess-implementation skill output](.assets/sample-assess-implementation-skill-output.png)
