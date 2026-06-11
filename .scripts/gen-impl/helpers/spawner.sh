@@ -146,7 +146,8 @@ prompt_for_spawner_command() {
   local reason
 
   while true; do
-    printf 'type in the AI agent spawner command (must have "[prompt]" in it): '
+    printf 'type in the AI agent spawner command (must have "[prompt]" in it): ' >&2
+    # Keep stdout clean so command substitution captures only accepted command.
     IFS= read -r command_template || die 'failed to read spawner command from stdin'
 
     if ! reason=$(validate_spawner_command_syntax "$command_template"); then
