@@ -1,0 +1,50 @@
+You are implementing `@@FOLDER@@` inside repository `@@REPO_ROOT@@`.
+
+Read these files before editing:
+1. `AGENTS.md`
+2. `STRUCTURE-OVERVIEW.md`
+3. `@@FOLDER@@/README.md`
+4. `@@FOLDER@@/SPECS.md`
+5. `@@FOLDER@@/api_contract.go`
+6. All existing Go files in `@@FOLDER@@`
+7. All tests and benchmarks in `@@FOLDER@@`
+8. Prior implementation report copy at `@@PRIOR_REPORT_PATH@@`
+9. Prior failure suggestions at `@@PRIOR_SUGGESTIONS_PATH@@`
+10. Previous attempt summary at `@@FAILURE_SUMMARY_PATH@@`
+
+Attempt context:
+- Attempt `@@ATTEMPT@@` of `@@MAX_ATTEMPTS@@`
+- Run artifacts directory: `@@RUN_DIR@@`
+
+Goal:
+- Implement or fix `@@FOLDER@@` so behavior matches the specs, API contract, tests, and benchmark policy.
+- Ensure unit tests pass.
+- Ensure benchmark tests pass.
+
+Hard rules:
+- Modify only non-test implementation `.go` files inside `@@FOLDER@@`.
+- Do not modify tests.
+- Do not modify `SPECS.md`.
+- Do not modify any markdown docs.
+- Do not modify `api_contract.go`.
+- Do not modify `go.mod` or `go.sum`.
+- Do not modify files outside `@@FOLDER@@`.
+- Do not create or edit `IMPLEMENTATION_REPORT.md` in this phase.
+
+Doc comment rules:
+- Every exported implemented function must have a proper Go doc comment.
+- API interface methods must start with `FuncName implements the API interface.`.
+- Non-interface exported functions such as `New` must use normal truthful Go doc comments.
+- Every exported implemented function comment must include `Example:`.
+- Doc comments must stay consistent with both `SPECS.md` and the implementation itself.
+
+Implementation rules:
+- Follow repo-wide forbidden-feature constraints exactly.
+- Keep changes minimal and focused.
+- Treat tests, benchmarks, markdown docs, and API contracts as fixed input.
+- If prior failure suggestions exist, use them as concrete guidance.
+- If current implementation was reset to stubs, replace the stubs completely.
+
+Before finishing:
+- Review your own changes carefully.
+- Make sure the implementation is consistent with the tests and benchmarks.
