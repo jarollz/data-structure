@@ -39,6 +39,18 @@ type API[T any] interface {
 	//
 	// Example: h.Clear()
 	Clear()
+	// Clone returns independent heap copy with same length, capacity, comparator, and internal array order.
+	//
+	// Elements are copied with normal Go assignment.
+	//
+	// Example: cloned := h.Clone()
+	Clone() *Heap[T]
+	// CloneWith returns independent heap copy using cloneValue for each live element.
+	//
+	// cloneValue receives each live value in internal array order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := h.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *Heap[T]
 	// Values yields each stored element once in internal array order.
 	//
 	// Yield order is not sorted order. Sequence supports early stop when yield returns false and yields nothing when heap is empty.

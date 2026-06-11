@@ -56,6 +56,18 @@ type API[K any, V any] interface {
 	//
 	// Example: m.Clear()
 	Clear()
+	// Clone returns independent map copy with same length, comparator, and ascending key order.
+	//
+	// Keys and values are copied with normal Go assignment.
+	//
+	// Example: cloned := m.Clone()
+	Clone() *MapTreeRedBlack[K, V]
+	// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
+	//
+	// cloneKey and cloneValue receive each live key-value pair in ascending key order. When either hook is nil, CloneWith uses normal Go assignment for that payload type.
+	//
+	// Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
+	CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapTreeRedBlack[K, V]
 	// All yields each key-value pair once in ascending key order.
 	//
 	// Sequence supports early stop when yield returns false and yields nothing when empty.

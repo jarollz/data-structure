@@ -11,6 +11,8 @@ In this repository, the implementation must manage storage manually with arrays 
 - `Append(v)` always succeeds and returns `true`.
 - `Insert(i, v)` inserts before index `i`. Valid indexes are `0..Len()`.
 - `Get`, `Set`, and `Delete` handle out-of-range indexes safely.
+- `Clone()` returns independent list copy with same `Len()`, `Cap()`, and element order. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent list copy with same `Len()`, `Cap()`, and element order. A nil hook uses normal Go assignment.
 - `Values()` yields elements in index order from `0` to `Len()-1`.
 - Mutation during iteration is not safe.
 
@@ -28,6 +30,8 @@ In this repository, the implementation must manage storage manually with arrays 
 - `Append(v)`: amortized `O(1)`
 - `Insert(i, v)`: `O(n)`
 - `Delete(i)`: `O(n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -36,4 +40,4 @@ In this repository, the implementation must manage storage manually with arrays 
 - Preserve relative order after insert and delete.
 
 ## Implementation Rules
-- Read and follow `list-array/RULES.md` before writing code.
+- Read and follow `list-array/SPECS.md` before writing code.

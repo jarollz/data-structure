@@ -61,6 +61,22 @@ func (s *TreeAvl[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent tree copy with same length, comparator, and ascending in-order sequence.
+// Values are copied with normal Go assignment.
+// Example: cloned := tree.Clone()
+func (s *TreeAvl[T]) Clone() *TreeAvl[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent tree copy using cloneValue for each live value.
+// cloneValue receives each live value in ascending in-order traversal; nil means normal Go assignment.
+// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
+func (s *TreeAvl[T]) CloneWith(cloneValue func(T) T) *TreeAvl[T] {
+	panic("not implemented")
+}
+
 // InOrder implements the API interface.
 // InOrder yields values in ascending sorted order.
 // Sequence yields each live value once, supports early stop, and yields nothing when empty.

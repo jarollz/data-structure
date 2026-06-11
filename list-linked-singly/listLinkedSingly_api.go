@@ -53,6 +53,22 @@ func (s *ListLinkedSingly[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent list copy with same length and head-to-tail order.
+// Elements are copied with normal Go assignment.
+// Example: cloned := list.Clone()
+func (s *ListLinkedSingly[T]) Clone() *ListLinkedSingly[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent list copy using cloneValue for each live node.
+// cloneValue receives each live value from head to tail; nil means normal Go assignment.
+// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+func (s *ListLinkedSingly[T]) CloneWith(cloneValue func(T) T) *ListLinkedSingly[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields values head-to-tail exactly once per live node.
 // Sequence supports early stop and yields nothing when empty.

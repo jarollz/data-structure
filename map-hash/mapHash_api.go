@@ -69,6 +69,22 @@ func (s *MapHash[K, V]) LoadFactor() float64 {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent map copy with same live entries, capacity, load factor, hash hook, and equal hook.
+// Keys and values are copied with normal Go assignment.
+// Example: cloned := m.Clone()
+func (s *MapHash[K, V]) Clone() *MapHash[K, V] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
+// cloneKey and cloneValue receive each live key-value pair once; nil means normal Go assignment for that payload type.
+// Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
+func (s *MapHash[K, V]) CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapHash[K, V] {
+	panic("not implemented")
+}
+
 // All implements the API interface.
 // All yields each live key-value pair exactly once in unspecified order.
 // Sequence supports early stop and yields nothing when map is empty.

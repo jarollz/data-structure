@@ -1,6 +1,6 @@
 ---
 name: assess-implementation
-description: Use when grading data structure implementations against AGENTS.md, STRUCTURE-CONTRACTS.md, and per-folder RULES.md. Supports whole-repo grading or exact scoped requests like `invoke the skill assess-implementation only for folder list-array` and `invoke the skill assess-implementation only for folders list-array, stack`. Prints compact markdown grading table to terminal and writes full markdown report to tmp/assessment_YYYYMMDD_HHMMSS.md.
+description: Use when grading data structure implementations against AGENTS.md, STRUCTURE-OVERVIEW.md, and per-folder SPECS.md. Supports whole-repo grading or exact scoped requests like `invoke the skill assess-implementation only for folder list-array` and `invoke the skill assess-implementation only for folders list-array, stack`. Prints compact markdown grading table to terminal and writes full markdown report to tmp/assessment_YYYYMMDD_HHMMSS.md.
 ---
 
 # Assess Implementation
@@ -11,14 +11,14 @@ Perform strict evidence-based grading for every data structure folder in this re
 Compare implementation, tests, benchmarks, and required files against:
 
 - root `AGENTS.md`
-- root `STRUCTURE-CONTRACTS.md`
-- each structure folder `RULES.md`
+- root `STRUCTURE-OVERVIEW.md`
+- each structure folder `SPECS.md`
 
 No benefit of doubt. Missing proof counts as failure.
 
 ## Scope
 
-Default mode: assess every top-level structure folder discovered from `*/RULES.md`.
+Default mode: assess every top-level structure folder discovered from `*/SPECS.md`.
 
 Scoped mode: if user says `invoke the skill assess-implementation only for folder xxxx` or `invoke the skill assess-implementation only for folders xxxx, yyyy`, assess only requested folders.
 
@@ -30,13 +30,13 @@ Scoped mode rules:
 - Accept multiple requested targets in comma-separated, space-separated, or individually quoted/backticked forms when intent is clear.
 - Deduplicate normalized target folders before assessment.
 - Reject absolute paths, parent traversal such as `../`, and non-top-level paths.
-- Every requested target folder must exist and contain its own `RULES.md`.
+- Every requested target folder must exist and contain its own `SPECS.md`.
 - In scoped mode, do not assess any structure folders outside selected target set.
 - In scoped mode, terminal table contains data rows for selected targets only.
 - In scoped mode, full markdown report contains summary and findings for selected targets only.
-- If any requested target is missing, ambiguous, or lacks `RULES.md`, stop and report invalid targets instead of silently falling back to whole-repo assessment.
+- If any requested target is missing, ambiguous, or lacks `SPECS.md`, stop and report invalid targets instead of silently falling back to whole-repo assessment.
 
-Assess every top-level structure folder discovered from `*/RULES.md`, including:
+Assess every top-level structure folder discovered from `*/SPECS.md`, including:
 
 - `map-hash`
 - `map-tree-avl`
@@ -52,7 +52,7 @@ Assess every top-level structure folder discovered from `*/RULES.md`, including:
 - `tree-avl`
 - `tree-red-black`
 
-If more structure folders exist later, include them automatically when they contain `RULES.md`.
+If more structure folders exist later, include them automatically when they contain `SPECS.md`.
 
 ## Invocation Examples
 
@@ -80,8 +80,8 @@ Preferred helper commands:
 ## Evidence Rules
 
 - Read root `AGENTS.md` first.
-- Read root `STRUCTURE-CONTRACTS.md` second.
-- Read each folder `RULES.md` before grading that folder.
+- Read root `STRUCTURE-OVERVIEW.md` second.
+- Read each folder `SPECS.md` before grading that folder.
 - Inspect implementation `.go` files separately from tests and benchmarks.
 - Treat files ending in `_test.go` as tests only.
 - Treat benchmark functions as real only when they use `func Benchmark...`.
@@ -111,7 +111,7 @@ For each structure folder, verify all of these.
 ### 1. Required Delivery
 
 - `README.md` exists.
-- `RULES.md` exists.
+- `SPECS.md` exists.
 - Real tests exist.
 - Real benchmarks exist.
 
@@ -131,9 +131,9 @@ Check implementation files only. Ignore test-only use of slices or maps.
 
 ### 4. API Compliance
 
-- Public constructor and methods required by folder `RULES.md` exist.
+- Public constructor and methods required by folder `SPECS.md` exist.
 - Naming matches contract exactly.
-- Iterator naming matches root `AGENTS.md` and `STRUCTURE-CONTRACTS.md`.
+- Iterator naming matches root `AGENTS.md` and `STRUCTURE-OVERVIEW.md`.
 - Return shapes and edge-case behavior are supported by code and tests.
 
 ### 5. Invariants And Behavior
@@ -142,21 +142,21 @@ Check implementation files only. Ignore test-only use of slices or maps.
 - Resize policy or node-pool policy matches folder rules.
 - Invariant-preserving logic exists in implementation.
 - Iterator order, count, early-stop, and mutation-unsafety are covered by code and tests.
-- Edge cases from `RULES.md` are handled and tested.
+- Edge cases from `SPECS.md` are handled and tested.
 
 ### 6. Test Evidence
 
 - Unit tests cover every public API.
 - Tests validate invariants.
 - Tests validate iterator contract.
-- Tests include checklist items from `RULES.md`.
+- Tests include checklist items from `SPECS.md`.
 - Randomized or oracle-based tests exist when required.
 - Placeholder tests score zero.
 
 ### 7. Benchmark Evidence
 
 - Benchmarks exist.
-- Benchmarks cover workloads required by `RULES.md`.
+- Benchmarks cover workloads required by `SPECS.md`.
 - Benchmarks cover multiple sizes when required by root `AGENTS.md`.
 
 ### 8. Command Evidence
@@ -176,7 +176,7 @@ Strict-hard caps tied to command evidence:
 - If required benchmark command fails or is missing, cap `Benchmark and delivery evidence` at `5/10`.
 - Missing command execution when implementation exists is treated as failed command evidence, not neutral.
 
-## RULES Parsing Discipline
+## SPECS Parsing Discipline
 
 - Parse checklist items only from markdown checkbox bullets: `- [ ] ...`.
 - Parse required API names only from backticked signatures in `## Required API` section.
@@ -193,7 +193,7 @@ Score each structure from `0` to `100`.
 | Storage and forbidden-feature compliance | 25 | arrays-only rule, no `map`, no slice use in implementation code, representation contract |
 | Invariants and behavior | 20 | correctness logic, resize policy, iterator contract, edge cases |
 | Test evidence | 20 | API coverage, invariant tests, iterator tests, randomized/oracle tests |
-| Benchmark and delivery evidence | 10 | benchmarks, multiple sizes, README/RULES/tests/bench presence |
+| Benchmark and delivery evidence | 10 | benchmarks, multiple sizes, README/SPECS/tests/bench presence |
 
 Category scoring must be harsh:
 
@@ -211,8 +211,8 @@ Letter grades:
 
 Also calculate:
 
-- `Rules passed`: number of satisfied checklist items found in that folder `RULES.md`
-- `Rules total`: total checklist items in that folder `RULES.md`
+- `Specs passed`: number of satisfied checklist items found in that folder `SPECS.md`
+- `Specs total`: total checklist items in that folder `SPECS.md`
 - `Compliance % = rules passed / rules total * 100`
 
 ## Required Output
@@ -246,13 +246,13 @@ Keep terminal table narrow so plain terminals can still read it.
 
 Use this exact column set:
 
-| Folder | Grade | Score | Rules | Tests | Bench | Notes |
+| Folder | Grade | Score | Specs | Tests | Bench | Notes |
 |---|---:|---:|---:|---:|---:|---|
 
 Column meaning:
 
 - `Score`: numeric score out of `100`
-- `Rules`: compliance percent rounded to whole number
+- `Specs`: compliance percent rounded to whole number
 - `Tests`: test evidence score out of `20`
 - `Bench`: benchmark and delivery score out of `10`
 - `Notes`: short failure summary only
@@ -275,12 +275,12 @@ Write markdown file with this structure:
 
 - Repository: <repo path or name>
 - Timestamp: <ISO-like timestamp>
-- Inputs: `AGENTS.md`, `STRUCTURE-CONTRACTS.md`, each folder `RULES.md`
+- Inputs: `AGENTS.md`, `STRUCTURE-OVERVIEW.md`, each folder `SPECS.md`
 - Policy: strict evidence only, no benefit of doubt
 
 ## Summary Table
 
-| Folder | Grade | Score | Rules | Tests | Bench | Notes |
+| Folder | Grade | Score | Specs | Tests | Bench | Notes |
 |---|---:|---:|---:|---:|---:|---|
 | ... |
 
@@ -290,7 +290,7 @@ Write markdown file with this structure:
 
 - Grade: `F`
 - Score: `2/100`
-- Rules passed: `2/31 (6%)`
+- Specs passed: `2/31 (6%)`
 - Hard fail: `yes - no implementation files`
 
 #### Category Breakdown
@@ -301,7 +301,7 @@ Write markdown file with this structure:
 | Storage and forbidden-feature compliance | 0/25 | `not assessable because implementation missing` |
 | Invariants and behavior | 0/20 | `no code, no proofs` |
 | Test evidence | 0/20 | `nothing_test.go` only; placeholder |
-| Benchmark and delivery evidence | 2/10 | `README.md` and `RULES.md` exist; benchmarks missing |
+| Benchmark and delivery evidence | 2/10 | `README.md` and `SPECS.md` exist; benchmarks missing |
 
 #### Findings
 
@@ -344,8 +344,8 @@ Suggest these only after completing repo-based grading. These are outside direct
 2. Detect whether user requested scoped mode with one or more exact folder names or repo-relative folder paths.
 3. If scoped mode requested, normalize allowed repo-relative forms to canonical top-level folder names.
 4. If scoped mode requested, deduplicate targets.
-5. If scoped mode requested, validate every target folder has `RULES.md`; otherwise stop with invalid-target message listing bad targets.
-6. If scoped mode not requested, enumerate structure folders from `*/RULES.md`.
+5. If scoped mode requested, validate every target folder has `SPECS.md`; otherwise stop with invalid-target message listing bad targets.
+6. If scoped mode not requested, enumerate structure folders from `*/SPECS.md`.
 7. Run bundled helper script from `.agents/skills/assess-implementation/resources/assess_impl.py`.
 8. Run per-folder strict-hard command checks: `make test-folder FOLDER=<folder>` and optional `make bench-folder FOLDER=<folder>`.
 9. Apply strict-hard command-evidence score caps when required commands fail or are missing.

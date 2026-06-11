@@ -10,6 +10,8 @@ In this repository, the implementation must use an array-backed circular buffer.
 - The queue grows and shrinks internally. Callers do not manage resizing directly.
 - `Enqueue(v)` adds a value at the back and always returns `true`.
 - `Dequeue()` and `PeekFront()` return `(zero, false)` when the queue is empty.
+- `Clone()` returns independent queue copy with same `Len()`, `Cap()`, and front-to-back order. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent queue copy with same `Len()`, `Cap()`, and front-to-back order. A nil hook uses normal Go assignment.
 - `Values()` yields values from front to back.
 - Mutation during iteration is not safe.
 
@@ -25,6 +27,8 @@ In this repository, the implementation must use an array-backed circular buffer.
 - `Enqueue(v)`: amortized `O(1)`
 - `Dequeue()`: amortized `O(1)`
 - `PeekFront()`: `O(1)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -33,4 +37,4 @@ In this repository, the implementation must use an array-backed circular buffer.
 - On resize, repack values in logical front-to-back order.
 
 ## Implementation Rules
-- Read and follow `queue/RULES.md` before writing code.
+- Read and follow `queue/SPECS.md` before writing code.

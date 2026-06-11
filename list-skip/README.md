@@ -10,6 +10,8 @@ In this repository, it is a set-like structure: values are unique. The implement
 - The comparator defines sorted order.
 - Duplicate values are not stored. `Insert(v)` returns `false` when the value already exists.
 - `Delete(v)` returns `false` when the value is missing.
+- `Clone()` returns independent skip-list copy with same sorted order, comparator, `maxLevel`, `currentLevel`, and deterministic RNG state. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent skip-list copy with same sorted order, comparator, `maxLevel`, `currentLevel`, and deterministic RNG state. A nil hook uses normal Go assignment.
 - `Values()` yields values in sorted order by traversing level `0`.
 - Level generation is deterministic for tests. The same operation sequence must produce the same levels.
 - Mutation during iteration is not safe.
@@ -26,6 +28,8 @@ In this repository, it is a set-like structure: values are unique. The implement
 - `Has(v)`: expected `O(log n)`
 - `Insert(v)`: expected `O(log n)`
 - `Delete(v)`: expected `O(log n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)` on average
 
 ## Implementation notes
@@ -34,4 +38,4 @@ In this repository, it is a set-like structure: values are unique. The implement
 - Reduce `currentLevel` after deletions when upper levels become empty.
 
 ## Implementation Rules
-- Read and follow `list-skip/RULES.md` before writing code.
+- Read and follow `list-skip/SPECS.md` before writing code.

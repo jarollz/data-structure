@@ -44,6 +44,18 @@ type API[T any] interface {
 	//
 	// Example: list.Clear()
 	Clear()
+	// Clone returns independent list copy with same length and head-to-tail order.
+	//
+	// Elements are copied with normal Go assignment.
+	//
+	// Example: cloned := list.Clone()
+	Clone() *ListLinkedSingly[T]
+	// CloneWith returns independent list copy using cloneValue for each live node.
+	//
+	// cloneValue receives each live value from head to tail. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *ListLinkedSingly[T]
 	// Values yields values from head to tail.
 	//
 	// Sequence yields each element once, supports early stop when yield returns false, and yields nothing for an empty list.

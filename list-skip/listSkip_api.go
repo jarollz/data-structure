@@ -45,6 +45,22 @@ func (s *ListSkip[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent skip-list copy with same length and sorted order.
+// Elements are copied with normal Go assignment. Clone also preserves comparator, maxLevel, currentLevel, and deterministic RNG state.
+// Example: cloned := list.Clone()
+func (s *ListSkip[T]) Clone() *ListSkip[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent skip-list copy using cloneValue for each live element.
+// cloneValue receives each live value in sorted order; nil means normal Go assignment.
+// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+func (s *ListSkip[T]) CloneWith(cloneValue func(T) T) *ListSkip[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields values in ascending sorted order from level 0.
 // Sequence yields each live value once, supports early stop, and yields nothing when empty.

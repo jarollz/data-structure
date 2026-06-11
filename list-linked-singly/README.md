@@ -10,6 +10,8 @@ In this repository, the implementation must use an index-based node pool backed 
 - `PopFront()` returns `(zero, false)` when the list is empty.
 - `Append(v)` appends at the tail in `O(1)` time.
 - `DeleteFirst(match)` removes the first value that matches and returns `false` when no match exists.
+- `Clone()` returns independent list copy with same `Len()` and head-to-tail order. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent list copy with same `Len()` and head-to-tail order. A nil hook uses normal Go assignment.
 - `Values()` yields values from head to tail.
 - Mutation during iteration is not safe.
 
@@ -26,6 +28,8 @@ In this repository, the implementation must use an index-based node pool backed 
 - `PopFront()`: `O(1)`
 - `Append(v)`: `O(1)`
 - `DeleteFirst(match)`: `O(n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -35,4 +39,4 @@ In this repository, the implementation must use an index-based node pool backed 
 - When the node pool is full, allocate larger arrays and copy node fields by index.
 
 ## Implementation Rules
-- Read and follow `list-linked-singly/RULES.md` before writing code.
+- Read and follow `list-linked-singly/SPECS.md` before writing code.

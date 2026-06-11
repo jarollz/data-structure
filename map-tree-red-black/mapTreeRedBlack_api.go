@@ -70,6 +70,22 @@ func (s *MapTreeRedBlack[K, V]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent map copy with same length, comparator, and ascending key order.
+// Keys and values are copied with normal Go assignment.
+// Example: cloned := m.Clone()
+func (s *MapTreeRedBlack[K, V]) Clone() *MapTreeRedBlack[K, V] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
+// cloneKey and cloneValue receive each live key-value pair in ascending key order; nil means normal Go assignment for that payload type.
+// Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
+func (s *MapTreeRedBlack[K, V]) CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapTreeRedBlack[K, V] {
+	panic("not implemented")
+}
+
 // All implements the API interface.
 // All yields each key-value pair exactly once in ascending key order.
 // Sequence supports early stop and yields nothing when empty.

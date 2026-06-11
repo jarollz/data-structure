@@ -11,6 +11,8 @@ In this repository, the implementation uses open addressing with linear probing 
 - `Put(key, value)` inserts a new key or overwrites an existing key.
 - `Delete(key)` returns `false` when the key is missing.
 - `LoadFactor()` is `Len()/Cap()` and does not count tombstones.
+- `Clone()` returns independent map copy with same live entries, `Cap()`, `LoadFactor()`, `hash`, and `equal`. Keys and values are copied with normal Go assignment.
+- `CloneWith(cloneKey, cloneValue)` returns independent map copy with same live entries, `Cap()`, `LoadFactor()`, `hash`, and `equal`. Nil hooks use normal Go assignment for that payload type.
 - Iteration order from `All()` is unspecified.
 - Mutation during iteration is not safe.
 
@@ -26,6 +28,8 @@ In this repository, the implementation uses open addressing with linear probing 
 - `Get(key)`: average `O(1)`, worst `O(n)`
 - `Put(key, value)`: average `O(1)`, worst `O(n)`
 - `Delete(key)`: average `O(1)`, worst `O(n)`
+- `Clone()`: `O(capacity)`
+- `CloneWith(cloneKey, cloneValue)`: `O(capacity)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -35,4 +39,4 @@ In this repository, the implementation uses open addressing with linear probing 
 - `Clear()` removes live entries and tombstones and resets capacity to the minimum configured capacity.
 
 ## Implementation Rules
-- Read and follow `map-hash/RULES.md` before writing code.
+- Read and follow `map-hash/SPECS.md` before writing code.

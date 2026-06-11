@@ -50,6 +50,22 @@ func (s *Heap[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent heap copy with same length, capacity, comparator, and internal array order.
+// Elements are copied with normal Go assignment.
+// Example: cloned := h.Clone()
+func (s *Heap[T]) Clone() *Heap[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent heap copy using cloneValue for each live element.
+// cloneValue receives each live value in internal array order; nil means normal Go assignment.
+// Example: cloned := h.CloneWith(func(v int) int { return v * 10 })
+func (s *Heap[T]) CloneWith(cloneValue func(T) T) *Heap[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields each live element once in internal array order, not sorted order.
 // Sequence supports early stop and yields nothing when heap is empty.

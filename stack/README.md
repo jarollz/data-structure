@@ -11,6 +11,8 @@ In this repository, the implementation must use array-backed storage only. Do no
 - `Push(v)` always returns `true`.
 - `Pop()` and `PeekTop()` return `(zero, false)` when the stack is empty.
 - The top element is the element at index `Len()-1`.
+- `Clone()` returns independent stack copy with same `Len()`, `Cap()`, and top-to-bottom order. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent stack copy with same `Len()`, `Cap()`, and top-to-bottom order. A nil hook uses normal Go assignment.
 - `Values()` yields values from top to bottom.
 - Mutation during iteration is not safe.
 
@@ -26,6 +28,8 @@ In this repository, the implementation must use array-backed storage only. Do no
 - `Push(v)`: amortized `O(1)`
 - `Pop()`: amortized `O(1)`
 - `PeekTop()`: `O(1)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -34,4 +38,4 @@ In this repository, the implementation must use array-backed storage only. Do no
 - Shrink with hysteresis after enough pops.
 
 ## Implementation Rules
-- Read and follow `stack/RULES.md` before writing code.
+- Read and follow `stack/SPECS.md` before writing code.

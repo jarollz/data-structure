@@ -11,6 +11,8 @@ This folder is set-like: it stores unique values of type `T`, not key-value pair
 - Duplicate values are not stored. `Insert(v)` returns `false` when the value already exists.
 - `Delete(v)` returns `false` when the value is missing.
 - `Min()` and `Max()` return `(zero, false)` when the tree is empty.
+- `Clone()` returns independent tree copy with same comparator and in-order value sequence. Values are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent tree copy with same comparator and in-order value sequence. A nil hook uses normal Go assignment.
 - `InOrder()` yields values in ascending order.
 - Mutation during iteration is not safe.
 
@@ -28,6 +30,8 @@ This folder is set-like: it stores unique values of type `T`, not key-value pair
 - `Has(v)`: `O(log n)`
 - `Min()` and `Max()`: `O(log n)`
 - `InOrder()`: `O(n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -36,4 +40,4 @@ This folder is set-like: it stores unique values of type `T`, not key-value pair
 - Maintain BST ordering, correct heights, and balance factors in `[-1, 1]`.
 
 ## Implementation Rules
-- Read and follow `tree-avl/RULES.md` before writing code.
+- Read and follow `tree-avl/SPECS.md` before writing code.

@@ -13,6 +13,8 @@ Each node can have zero or more children. The public API is ID-based rather than
 - `RemoveSubtree(nodeID)` removes the node and all descendants. `RemoveSubtree(0)` empties the tree.
 - `Get` and `Parent` report failure for invalid or removed IDs.
 - `ChildCount` returns `-1` for invalid or removed IDs.
+- `Clone()` returns independent tree copy with same live IDs, removed-ID holes, child order, and next-ID progression. Node values are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent tree copy with same live IDs, removed-ID holes, child order, and next-ID progression. A nil hook uses normal Go assignment.
 - `PreOrder()` yields each parent before its children.
 - Mutation during iteration is not safe.
 
@@ -30,6 +32,8 @@ Each node can have zero or more children. The public API is ID-based rather than
 - `AddChild(parentID, value)`: depends on the child-link traversal strategy
 - `RemoveSubtree(nodeID)`: `O(size of removed subtree)`
 - `PreOrder()`: `O(n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -38,4 +42,4 @@ Each node can have zero or more children. The public API is ID-based rather than
 - Use `-1` as the nil sentinel index.
 
 ## Implementation Rules
-- Read and follow `tree-general/RULES.md` before writing code.
+- Read and follow `tree-general/SPECS.md` before writing code.

@@ -11,6 +11,8 @@ Compared with a hash map, it gives ordered behavior and predictable logarithmic 
 - `Put(key, value)` inserts a new key or overwrites an existing key without changing `Len()` on overwrite.
 - `Delete(key)` returns `false` when the key is missing.
 - `Min()` and `Max()` return `(zeroK, zeroV, false)` when the map is empty.
+- `Clone()` returns independent map copy with same comparator and ascending key order. Keys and values are copied with normal Go assignment.
+- `CloneWith(cloneKey, cloneValue)` returns independent map copy with same comparator and ascending key order. Nil hooks use normal Go assignment for that payload type.
 - `All()` yields key-value pairs in ascending key order.
 - Mutation during iteration is not safe.
 
@@ -28,6 +30,8 @@ Compared with a hash map, it gives ordered behavior and predictable logarithmic 
 - `Delete(key)`: `O(log n)`
 - `Min()` and `Max()`: `O(log n)`
 - `All()`: `O(n)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneKey, cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -36,4 +40,4 @@ Compared with a hash map, it gives ordered behavior and predictable logarithmic 
 - Maintain BST ordering plus AVL height and balance invariants.
 
 ## Implementation Rules
-- Read and follow `map-tree-avl/RULES.md` before writing code.
+- Read and follow `map-tree-avl/SPECS.md` before writing code.

@@ -69,6 +69,22 @@ func (s *ListArray[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent list copy with same length, capacity, and index order.
+// Elements are copied with normal Go assignment.
+// Example: cloned := list.Clone()
+func (s *ListArray[T]) Clone() *ListArray[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent list copy using cloneValue for each live element.
+// cloneValue receives each live element in index order; nil means normal Go assignment.
+// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+func (s *ListArray[T]) CloneWith(cloneValue func(T) T) *ListArray[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields elements in index order from 0 to Len()-1.
 // Sequence yields each live element once, supports early stop, and yields nothing when empty.

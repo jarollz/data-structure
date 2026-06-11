@@ -2,23 +2,30 @@ package maptreeavl
 
 import "testing"
 
-var benchMapTreeAvlSink int
+var benchMapTreeAvlSinkInt int
+var benchMapTreeAvlSinkLarge benchLargePayload
 
 func BenchmarkMapTreeAvlPut(b *testing.B) {
 	for _, n := range []int{1_000, 10_000, 100_000} {
 		b.Run("size="+itoa(n), func(b *testing.B) {
 			m := New[int, int](cmpInt)
-			for i := 0; i < n; i++ {
-				m.Put(i, i)
-			}
-			next := n
+			next := 0
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				m.Put(next, next)
 				next++
+				if m.Len() > n*2 {
+					b.StopTimer()
+					for j := next - n; j < next; j++ {
+						m.Delete(j)
+					}
+					next = n
+					b.StartTimer()
+				}
 			}
-			benchMapTreeAvlSink = next
+			benchMapTreeAvlSinkInt = next
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
 		})
 	}
 }
@@ -30,15 +37,16 @@ func BenchmarkMapTreeAvlGet(b *testing.B) {
 			for i := 0; i < n; i++ {
 				m.Put(i, i)
 			}
-			sum := 0
+			hits := 0
 			b.ReportAllocs()
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				if v, ok := m.Get(i % n); ok {
-					sum += v
+					hits += v
 				}
 			}
-			benchMapTreeAvlSink = sum
+			benchMapTreeAvlSinkInt = hits
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
 		})
 	}
 }
@@ -59,6 +67,128 @@ func BenchmarkMapTreeAvlDelete(b *testing.B) {
 				m.Put(k, k)
 				b.StartTimer()
 			}
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlHas(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("size="+itoa(n), func(b *testing.B) {
+			m := New[int, int](cmpInt)
+			for i := 0; i < n; i++ {
+				m.Put(i, i)
+			}
+			hits := 0
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				if m.Has(i % n) {
+					hits++
+				}
+			}
+			benchMapTreeAvlSinkInt = hits
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlMin(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("size="+itoa(n), func(b *testing.B) {
+			m := New[int, int](cmpInt)
+			for i := 0; i < n; i++ {
+				m.Put(i, i)
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				k, _, _ := m.Min()
+				benchMapTreeAvlSinkInt = k
+			}
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlMax(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("size="+itoa(n), func(b *testing.B) {
+			m := New[int, int](cmpInt)
+			for i := 0; i < n; i++ {
+				m.Put(i, i)
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				k, _, _ := m.Max()
+				benchMapTreeAvlSinkInt = k
+			}
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlClear(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("size="+itoa(n), func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				m := New[int, int](cmpInt)
+				for j := 0; j < n; j++ {
+					m.Put(j, j)
+				}
+				m.Clear()
+				benchMapTreeAvlSinkInt = m.Len()
+			}
+			reportBenchmarkBudget(b, benchON, payloadBytes[int](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlClone(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("large_size="+itoa(n), func(b *testing.B) {
+			m := New[int, benchLargePayload](cmpInt)
+			for i := 0; i < n; i++ {
+				var value benchLargePayload
+				value.Data[0] = uint64(i)
+				m.Put(i, value)
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				cloned := m.Clone()
+				_, v, _ := cloned.Min()
+				benchMapTreeAvlSinkLarge = v
+			}
+			reportBenchmarkBudget(b, benchON, payloadBytes[benchLargePayload](), n)
+		})
+	}
+}
+
+func BenchmarkMapTreeAvlCloneWith(b *testing.B) {
+	for _, n := range []int{1_000, 10_000, 100_000} {
+		b.Run("large_size="+itoa(n), func(b *testing.B) {
+			m := New[int, benchLargePayload](cmpInt)
+			for i := 0; i < n; i++ {
+				var value benchLargePayload
+				value.Data[0] = uint64(i)
+				m.Put(i, value)
+			}
+			cloneValue := func(v benchLargePayload) benchLargePayload {
+				v.Data[1]++
+				return v
+			}
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				cloned := m.CloneWith(func(k int) int { return k }, cloneValue)
+				_, v, _ := cloned.Min()
+				benchMapTreeAvlSinkLarge = v
+			}
+			reportBenchmarkBudget(b, benchON, payloadBytes[benchLargePayload](), n)
 		})
 	}
 }
@@ -78,7 +208,8 @@ func BenchmarkMapTreeAvlAll(b *testing.B) {
 					sum += k + v
 				}
 			}
-			benchMapTreeAvlSink = sum
+			benchMapTreeAvlSinkInt = sum
+			reportBenchmarkBudget(b, benchON, payloadBytes[int](), n)
 		})
 	}
 }
@@ -101,8 +232,12 @@ func BenchmarkMapTreeAvlMixedReadWrite(b *testing.B) {
 					acc += v
 				}
 				m.Delete(i % n)
+				b.StopTimer()
+				m.Put(i%n, i)
+				b.StartTimer()
 			}
-			benchMapTreeAvlSink = acc
+			benchMapTreeAvlSinkInt = acc
+			reportBenchmarkBudget(b, benchOLogN, payloadBytes[int](), n)
 		})
 	}
 }

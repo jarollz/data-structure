@@ -37,6 +37,18 @@ type API[T any] interface {
 	//
 	// Example: list.Clear()
 	Clear()
+	// Clone returns independent skip-list copy with same length and sorted order.
+	//
+	// Elements are copied with normal Go assignment. Clone also preserves comparator, maxLevel, currentLevel, and deterministic RNG state.
+	//
+	// Example: cloned := list.Clone()
+	Clone() *ListSkip[T]
+	// CloneWith returns independent skip-list copy using cloneValue for each live element.
+	//
+	// cloneValue receives each live value in sorted order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *ListSkip[T]
 	// Values yields values in sorted order via level-0 traversal.
 	//
 	// Sequence yields each live element once, supports early stop when yield returns false, and yields nothing when empty.

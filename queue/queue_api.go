@@ -50,6 +50,22 @@ func (s *Queue[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent queue copy with same length, capacity, and front-to-back order.
+// Elements are copied with normal Go assignment.
+// Example: cloned := q.Clone()
+func (s *Queue[T]) Clone() *Queue[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent queue copy using cloneValue for each live element.
+// cloneValue receives each live value from front to back; nil means normal Go assignment.
+// Example: cloned := q.CloneWith(func(v int) int { return v * 10 })
+func (s *Queue[T]) CloneWith(cloneValue func(T) T) *Queue[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields elements from front to back in logical queue order.
 // Sequence yields each live element once, supports early stop, and yields nothing when empty.

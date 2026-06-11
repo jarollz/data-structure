@@ -50,6 +50,22 @@ func (s *Stack[T]) Clear() {
 	panic("not implemented")
 }
 
+// Clone implements the API interface.
+// Clone returns independent stack copy with same length, capacity, and top-to-bottom order.
+// Elements are copied with normal Go assignment.
+// Example: cloned := s.Clone()
+func (s *Stack[T]) Clone() *Stack[T] {
+	panic("not implemented")
+}
+
+// CloneWith implements the API interface.
+// CloneWith returns independent stack copy using cloneValue for each live element.
+// cloneValue receives each live value from top to bottom; nil means normal Go assignment.
+// Example: cloned := s.CloneWith(func(v int) int { return v * 10 })
+func (s *Stack[T]) CloneWith(cloneValue func(T) T) *Stack[T] {
+	panic("not implemented")
+}
+
 // Values implements the API interface.
 // Values yields elements from top to bottom in current stack order.
 // Sequence yields each live element once, supports early stop, and yields nothing when empty.

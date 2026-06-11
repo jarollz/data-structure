@@ -9,6 +9,8 @@ The comparator decides whether the heap behaves as a min-heap or a max-heap.
 - `New(capacity, cmp)` creates an empty heap. A capacity less than or equal to `0` is normalized to `16`.
 - `Push(v)` inserts a value, restores the heap property, and always returns `true`.
 - `PopTop()` and `PeekTop()` return `(zero, false)` when the heap is empty.
+- `Clone()` returns independent heap copy with same `Len()`, `Cap()`, comparator, and internal array order. Elements are copied with normal Go assignment.
+- `CloneWith(cloneValue)` returns independent heap copy with same `Len()`, `Cap()`, comparator, and internal array order. A nil hook uses normal Go assignment.
 - `Values()` yields internal array order, not sorted order.
 - Mutation during iteration is not safe.
 
@@ -24,6 +26,8 @@ The comparator decides whether the heap behaves as a min-heap or a max-heap.
 - `Push(v)`: `O(log n)`
 - `PopTop()`: `O(log n)`
 - `PeekTop()`: `O(1)`
+- `Clone()`: `O(n)`
+- `CloneWith(cloneValue)`: `O(n)`
 - Space: `O(n)`
 
 ## Implementation notes
@@ -32,4 +36,4 @@ The comparator decides whether the heap behaves as a min-heap or a max-heap.
 - Resize backing storage without breaking heap order.
 
 ## Implementation Rules
-- Read and follow `heap/RULES.md` before writing code.
+- Read and follow `heap/SPECS.md` before writing code.

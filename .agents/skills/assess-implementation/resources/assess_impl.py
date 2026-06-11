@@ -54,9 +54,9 @@ class FolderResult:
     folder: str
     score: int
     grade: str
-    rules_passed: int
-    rules_total: int
-    rules_pct: int
+    specs_passed: int
+    specs_total: int
+    specs_pct: int
     tests_score: int
     bench_score: int
     notes: str
@@ -100,15 +100,15 @@ def normalize_targets(targets: list[str]) -> list[str]:
 def discover_folders(repo: Path) -> list[str]:
     names: list[str] = []
     for child in sorted(repo.iterdir(), key=lambda p: p.name):
-        if child.is_dir() and (child / "RULES.md").exists():
+        if child.is_dir() and (child / "SPECS.md").exists():
             names.append(child.name)
     return names
 
 
-def required_api_names(rules_text: str) -> list[str]:
+def required_api_names(specs_text: str) -> list[str]:
     names: list[str] = []
     in_required = False
-    for line in rules_text.splitlines():
+    for line in specs_text.splitlines():
         if line.startswith("## "):
             in_required = line.strip().lower() == "## required api"
             continue
@@ -160,9 +160,9 @@ def is_placeholder_test(content: str) -> bool:
     return False
 
 
-def parse_checklist(rules_text: str) -> list[str]:
+def parse_checklist(specs_text: str) -> list[str]:
     items: list[str] = []
-    for line in rules_text.splitlines():
+    for line in specs_text.splitlines():
         m = CHECKLIST_RE.match(line)
         if m:
             items.append(m.group(1).strip())
@@ -173,7 +173,7 @@ def checklist_passes(
     items: list[str],
     api_found: set[str],
     readme_ok: bool,
-    rules_ok: bool,
+    specs_ok: bool,
     has_impl: bool,
     has_tests: bool,
     has_bench: bool,
@@ -186,8 +186,8 @@ def checklist_passes(
         done = False
         if "readme.md" in low:
             done = readme_ok
-        elif "rules.md" in low:
-            done = rules_ok
+        elif "specs.md" in low:
+            done = specs_ok
         elif "do not use `map`" in low:
             done = no_map
         elif "do not use `slice`" in low:
@@ -281,11 +281,11 @@ def run_bench_command(repo: Path, folder: str) -> tuple[bool, list[str], bool, l
 
 def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     base = repo / folder
-    rules_path = base / "RULES.md"
+    specs_path = base / "SPECS.md"
     readme_ok = (base / "README.md").exists()
-    rules_ok = rules_path.exists()
-    rules_text = rules_path.read_text(encoding="utf-8") if rules_ok else ""
-    checklist = parse_checklist(rules_text)
+    specs_ok = specs_path.exists()
+    specs_text = specs_path.read_text(encoding="utf-8") if specs_ok else ""
+    checklist = parse_checklist(specs_text)
 
     go_files = sorted(base.glob("*.go"))
     impl_files = [p for p in go_files if not p.name.endswith("_test.go")]
@@ -296,7 +296,7 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     test_blob_low = test_blob.lower()
 
     has_impl = len(impl_files) > 0
-    api_required = required_api_names(rules_text)
+    api_required = required_api_names(specs_text)
     api_found = extract_public_funcs(impl_texts)
     missing_api = [n for n in api_required if n not in api_found]
 
@@ -401,7 +401,7 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     bench_delivery_score = 0
     if readme_ok:
         bench_delivery_score += 2
-    if rules_ok:
+    if specs_ok:
         bench_delivery_score += 1
     if has_tests:
         bench_delivery_score += 2
@@ -424,23 +424,23 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
             strict_cap_reasons.append("benchmark command failed or missing; cap Benchmark and delivery to 5/10")
         bench_delivery_score = min(bench_delivery_score, 5)
 
-    rules_total = len(checklist)
-    rules_passed = checklist_passes(
+    specs_total = len(checklist)
+    specs_passed = checklist_passes(
         checklist,
         api_found,
         readme_ok,
-        rules_ok,
+        specs_ok,
         has_impl,
         has_tests,
         has_bench,
         no_map,
         no_slice,
     )
-    rules_pct = int(round((rules_passed / rules_total) * 100)) if rules_total else 0
+    specs_pct = int(round((specs_passed / specs_total) * 100)) if specs_total else 0
 
     findings: list[str] = []
     for method in missing_api:
-        findings.append(f"`{folder}/RULES.md` required API `{method}` not found in implementation.")
+        findings.append(f"`{folder}/SPECS.md` required API `{method}` not found in implementation.")
     if not has_tests:
         findings.append(f"`{folder}` no non-placeholder tests proved.")
     if not has_bench:
@@ -542,9 +542,9 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
         folder=folder,
         score=score,
         grade=letter,
-        rules_passed=rules_passed,
-        rules_total=rules_total,
-        rules_pct=rules_pct,
+        specs_passed=specs_passed,
+        specs_total=specs_total,
+        specs_pct=specs_pct,
         tests_score=tests_score,
         bench_score=bench_delivery_score,
         notes=", ".join(notes),
@@ -560,12 +560,12 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
 
 def render_table(results: list[FolderResult]) -> str:
     lines = [
-        "| Folder | Grade | Score | Rules | Tests | Bench | Notes |",
+        "| Folder | Grade | Score | Specs | Tests | Bench | Notes |",
         "|---|---:|---:|---:|---:|---:|---|",
     ]
     for r in results:
         lines.append(
-            f"| {r.folder} | {r.grade} | {r.score} | {r.rules_pct} | {r.tests_score} | {r.bench_score} | {r.notes} |"
+            f"| {r.folder} | {r.grade} | {r.score} | {r.specs_pct} | {r.tests_score} | {r.bench_score} | {r.notes} |"
         )
     return "\n".join(lines)
 
@@ -588,7 +588,7 @@ def render_report(repo: Path, results: list[FolderResult], timestamp: str, meta:
     lines.append("")
     lines.append(f"- Repository: `{repo}`")
     lines.append(f"- Timestamp: `{timestamp}`")
-    lines.append("- Inputs: `AGENTS.md`, `STRUCTURE-CONTRACTS.md`, each folder `RULES.md`")
+    lines.append("- Inputs: `AGENTS.md`, `STRUCTURE-OVERVIEW.md`, each folder `SPECS.md`")
     lines.append("- Policy: strict evidence only, no benefit of doubt")
     lines.append("")
     lines.append(render_run_metadata(meta))
@@ -605,7 +605,7 @@ def render_report(repo: Path, results: list[FolderResult], timestamp: str, meta:
         lines.append("")
         lines.append(f"- Grade: `{r.grade}`")
         lines.append(f"- Score: `{r.score}/100`")
-        lines.append(f"- Rules passed: `{r.rules_passed}/{r.rules_total} ({r.rules_pct}%)`")
+        lines.append(f"- Specs passed: `{r.specs_passed}/{r.specs_total} ({r.specs_pct}%)`")
         lines.append(f"- Hard fail: `{r.hard_fail}`")
         lines.append("")
         lines.append("#### Category Breakdown")
@@ -660,7 +660,7 @@ def main() -> int:
         "--folders",
         nargs="*",
         default=[],
-        help="Scoped folders. Default: auto-discover from */RULES.md",
+        help="Scoped folders. Default: auto-discover from */SPECS.md",
     )
     parser.add_argument(
         "--skip-commands",
@@ -687,7 +687,7 @@ def main() -> int:
             continue
 
     if invalid:
-        print("Invalid targets (must be top-level folders with RULES.md):")
+        print("Invalid targets (must be top-level folders with SPECS.md):")
         for t in invalid:
             print(f"- {t}")
         return 2

@@ -54,6 +54,18 @@ type API[K any, V any] interface {
 	//
 	// Example: lf := m.LoadFactor()
 	LoadFactor() float64
+	// Clone returns independent map copy with same live entries, capacity, load factor, hash hook, and equal hook.
+	//
+	// Keys and values are copied with normal Go assignment.
+	//
+	// Example: cloned := m.Clone()
+	Clone() *MapHash[K, V]
+	// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
+	//
+	// cloneKey and cloneValue receive each live key-value pair once. When either hook is nil, CloneWith uses normal Go assignment for that payload type.
+	//
+	// Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
+	CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapHash[K, V]
 	// All yields each live key-value pair exactly once.
 	//
 	// Iteration order is unspecified and may change after mutations; sequence supports early stop and yields nothing when empty.

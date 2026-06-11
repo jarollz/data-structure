@@ -51,6 +51,18 @@ type API[T any] interface {
 	//
 	// Example: list.Clear()
 	Clear()
+	// Clone returns independent list copy with same length, capacity, and index order.
+	//
+	// Elements are copied with normal Go assignment.
+	//
+	// Example: cloned := list.Clone()
+	Clone() *ListArray[T]
+	// CloneWith returns independent list copy using cloneValue for each live element.
+	//
+	// cloneValue receives each live element in index order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *ListArray[T]
 	// Values yields each element from index 0 to Len()-1.
 	//
 	// The sequence yields each live element once, supports early stop when yield returns false, and yields nothing for an empty list.

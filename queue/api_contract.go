@@ -39,6 +39,18 @@ type API[T any] interface {
 	//
 	// Example: q.Clear()
 	Clear()
+	// Clone returns independent queue copy with same length, capacity, and front-to-back order.
+	//
+	// Elements are copied with normal Go assignment.
+	//
+	// Example: cloned := q.Clone()
+	Clone() *Queue[T]
+	// CloneWith returns independent queue copy using cloneValue for each live element.
+	//
+	// cloneValue receives each live value from front to back. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := q.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *Queue[T]
 	// Values yields values from front to back.
 	//
 	// Sequence yields each live element once, supports early stop when yield returns false, and yields nothing when empty.

@@ -48,6 +48,18 @@ type API[T any] interface {
 	//
 	// Example: n := tree.Len()
 	Len() int
+	// Clone returns independent tree copy with same live IDs, removed-ID holes, child order, and next-ID progression.
+	//
+	// Node values are copied with normal Go assignment.
+	//
+	// Example: cloned := tree.Clone()
+	Clone() *TreeGeneral[T]
+	// CloneWith returns independent tree copy using cloneValue for each live node.
+	//
+	// cloneValue receives each live value in pre-order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	//
+	// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
+	CloneWith(cloneValue func(T) T) *TreeGeneral[T]
 	// PreOrder yields values parent-before-children.
 	//
 	// Sequence yields each live node once, supports early stop when yield returns false, and yields nothing when tree is empty.

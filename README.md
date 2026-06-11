@@ -69,10 +69,10 @@ This is an evolving learning project; folder contents may change over time as im
 
 ## Contracts and Guidance
 
-- Cross-folder contract summary: `STRUCTURE-CONTRACTS.md`
+- Cross-folder overview: `STRUCTURE-OVERVIEW.md`
 - Agent working rules: `AGENTS.md`
 - Release and tagging conventions: `RELEASING.md`
-- Per-structure implementation rules: each folder `RULES.md`
+- Per-structure implementation specs: each folder `SPECS.md`
 - Manual AI skill for grading implementations: `.agents/skills/assess-implementation/SKILL.md`
 
 ## AI Assessment Skill
