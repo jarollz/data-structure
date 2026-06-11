@@ -51,7 +51,7 @@ Rules:
 Example accepted input:
 
 ```text
-ttadk opencode -m gpt-5.4 -a run --dangerously-skip-permissions [prompt]
+opencode run --dangerously-skip-permissions [prompt]
 ```
 
 ## Single-Folder Flow
