@@ -2,6 +2,8 @@
 
 Personal learning repository for coding data structures in Go (Golang).
 
+Licensed under MIT. See `LICENSE`.
+
 ## Purpose
 
 This codebase is for personal practice and exploration of data structure implementations in Golang.
@@ -23,6 +25,43 @@ Data structures being explored correspond to top-level folders in this repositor
 - `tree-general/` - General tree (n-ary tree)
 - `tree-avl/` - AVL tree (self-balancing binary search tree, set-like)
 - `tree-red-black/` - Red-black tree (self-balancing binary search tree, set-like)
+
+## Importing a Specific Data Structure
+
+Each top-level data structure folder is a separate Go module.
+Install only the module you need:
+
+```bash
+go get github.com/jarollz/data-structure/<structure>@latest
+```
+
+Then import it in your code:
+
+```go
+import "github.com/jarollz/data-structure/<structure>"
+```
+
+Examples:
+
+```bash
+go get github.com/jarollz/data-structure/list-array@latest
+go get github.com/jarollz/data-structure/map-hash@latest
+go get github.com/jarollz/data-structure/tree-avl@latest
+```
+
+```go
+import (
+	"github.com/jarollz/data-structure/list-array"
+	"github.com/jarollz/data-structure/map-hash"
+	"github.com/jarollz/data-structure/tree-avl"
+)
+```
+
+### Risk Notice
+
+These modules are for learning and experimentation.
+Use at your own risk.
+For full warranty and liability terms, see `LICENSE`.
 
 ## Notes
 
