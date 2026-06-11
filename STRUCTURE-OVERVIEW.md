@@ -29,6 +29,7 @@ Authoritative contracts live in each folder `SPECS.md` and `api_contract.go`.
 | `tree-avl` | `Tree[T]` | `New(cmp)` | `InOrder() iter.Seq[T]` | Sorted | AVL set-like tree. |
 | `tree-red-black` | `Tree[T]` | `New(cmp)` | `InOrder() iter.Seq[T]` | Sorted | Red-black set-like tree. |
 | `map-hash` | `Map[K,V]` | `New(capacity, hash, equal)` | `All() iter.Seq2[K, V]` | Unspecified | Open-addressed hash map. |
+| `map-trie` | `MapTrie[V]` | `New()` | `All() iter.Seq2[string, V]` | Ascending byte-lex key | Trie map with prefix queries via `HasPrefix` and `WithPrefix`. |
 | `map-tree-avl` | `Map[K,V]` | `New(cmp)` | `All() iter.Seq2[K, V]` | Ascending key | AVL ordered map. |
 | `map-tree-red-black` | `Map[K,V]` | `New(cmp)` | `All() iter.Seq2[K, V]` | Ascending key | Red-black ordered map. |
 

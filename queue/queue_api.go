@@ -6,7 +6,9 @@ import "iter"
 var _ API[int] = (*Queue[int])(nil)
 
 // Enqueue implements the API interface.
-// Enqueue appends v at queue back and always returns true.
+// Enqueue appends v at queue back, grows backing storage before writing when
+// full, preserves FIFO order even across wrap-around state, and always returns
+// true.
 // v is value to enqueue.
 // Example: ok := q.Enqueue(1)
 func (s *Queue[T]) Enqueue(v T) bool {
@@ -23,7 +25,8 @@ func (s *Queue[T]) Dequeue() (T, bool) {
 
 // PeekFront implements the API interface.
 // PeekFront returns front value without removal.
-// It returns (zero, false) when queue is empty.
+// PeekFront does not change Len(), Cap(), or front-to-back order. It returns
+// (zero, false) when queue is empty.
 // Example: v, ok := q.PeekFront()
 func (s *Queue[T]) PeekFront() (T, bool) {
 	panic("not implemented")
@@ -38,6 +41,8 @@ func (s *Queue[T]) Len() int {
 
 // Cap implements the API interface.
 // Cap returns backing storage capacity.
+// Capacity starts at effective initial capacity and reflects later growth or
+// shrink decisions.
 // Example: c := q.Cap()
 func (s *Queue[T]) Cap() int {
 	panic("not implemented")
@@ -45,6 +50,8 @@ func (s *Queue[T]) Cap() int {
 
 // Clear implements the API interface.
 // Clear removes all queued elements and resets queue state.
+// Clear is safe on an already-empty queue and leaves the queue ready for
+// future Enqueue, Dequeue, and PeekFront calls.
 // Example: q.Clear()
 func (s *Queue[T]) Clear() {
 	panic("not implemented")
@@ -59,8 +66,11 @@ func (s *Queue[T]) Clone() *Queue[T] {
 }
 
 // CloneWith implements the API interface.
-// CloneWith returns independent queue copy using cloneValue for each live element.
-// cloneValue receives each live value from front to back; nil means normal Go assignment.
+// CloneWith returns independent queue copy using cloneValue for each live
+// element.
+// CloneWith preserves Len(), Cap(), and front-to-back order even when the
+// source queue is wrapped. cloneValue receives each live value once from front
+// to back and never sees unused slots; nil means normal Go assignment.
 // Example: cloned := q.CloneWith(func(v int) int { return v * 10 })
 func (s *Queue[T]) CloneWith(cloneValue func(T) T) *Queue[T] {
 	panic("not implemented")

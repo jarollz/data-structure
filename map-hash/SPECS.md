@@ -29,15 +29,15 @@ Purpose
 
 Behavior expectations
 - [ ] Normalize `capacity <= 0` to `16`.
-- [ ] Effective starting capacity is `max(16, capacity)`.
+- [ ] Effective starting capacity is `startCap = max(16, capacity)`.
 - [ ] `hash` and `equal` must both be non-nil.
 - [ ] Returned map is non-nil and empty.
 - [ ] `Len()` is `0` immediately after construction.
 - [ ] `Cap()` is normalized starting capacity immediately after construction.
 
 Performance expectations
-- [ ] `O(1)` time.
-- [ ] `O(capacity)` backing storage.
+- [ ] `O(startCap)` time.
+- [ ] `O(startCap)` backing storage.
 
 ### `Put(key K, value V)`
 Purpose
@@ -156,8 +156,8 @@ Behavior expectations
 - [ ] Tombstone-only slots are not treated as live entries.
 
 Performance expectations
-- [ ] `O(n)` time for `n = Len()` plus any chosen re-layout strategy.
-- [ ] `O(n)` extra storage.
+- [ ] `O(Cap())` time.
+- [ ] `O(Cap())` extra storage.
 
 ### `CloneWith(cloneKey func(K) K, cloneValue func(V) V) *Map[K, V]`
 Purpose
@@ -171,7 +171,7 @@ Behavior expectations
 - [ ] Cloned keys must remain compatible with `hash` and `equal`.
 
 Performance expectations
-- [ ] `O(n)` container work plus hook cost.
+- [ ] `O(Cap())` container work plus hook cost.
 
 ### `All() iter.Seq2[K, V]`
 Purpose

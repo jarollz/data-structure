@@ -4,14 +4,15 @@ import "iter"
 
 // Queue implements the API interface.
 //
-// Queue stores values with first-in-first-out semantics.
+// Queue stores live values with first-in-first-out semantics.
 type Queue[T any] struct{}
 
 // API defines queue behavior.
 type API[T any] interface {
 	// Enqueue adds v at queue back and returns true.
 	//
-	// v is value to append.
+	// v is value to append. Enqueue grows backing storage before writing when the
+	// queue is full and preserves FIFO order even across wrap-around state.
 	//
 	// Example: ok := q.Enqueue(1)
 	Enqueue(v T) bool
@@ -23,7 +24,8 @@ type API[T any] interface {
 	Dequeue() (T, bool)
 	// PeekFront returns queue front value without removal.
 	//
-	// It returns (zero, false) when queue is empty.
+	// PeekFront does not change Len(), Cap(), or front-to-back order. It returns
+	// (zero, false) when queue is empty.
 	//
 	// Example: v, ok := q.PeekFront()
 	PeekFront() (T, bool)
@@ -33,9 +35,15 @@ type API[T any] interface {
 	Len() int
 	// Cap returns current backing capacity.
 	//
+	// Capacity starts at effective initial capacity and reflects later growth or
+	// shrink decisions.
+	//
 	// Example: c := q.Cap()
 	Cap() int
 	// Clear removes all elements and resets queue state.
+	//
+	// Clear is safe on an already-empty queue and leaves it ready for future
+	// Enqueue, Dequeue, and PeekFront calls.
 	//
 	// Example: q.Clear()
 	Clear()
@@ -47,7 +55,10 @@ type API[T any] interface {
 	Clone() *Queue[T]
 	// CloneWith returns independent queue copy using cloneValue for each live element.
 	//
-	// cloneValue receives each live value from front to back. When cloneValue is nil, CloneWith uses normal Go assignment.
+	// CloneWith preserves Len(), Cap(), and front-to-back order even when the
+	// source queue is wrapped. cloneValue receives each live value once from
+	// front to back and never sees unused slots. When cloneValue is nil,
+	// CloneWith uses normal Go assignment.
 	//
 	// Example: cloned := q.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *Queue[T]

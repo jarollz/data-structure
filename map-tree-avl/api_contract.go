@@ -12,39 +12,44 @@ type API[K any, V any] interface {
 	// Put inserts or overwrites key with value.
 	//
 	// key is map key and value is stored payload.
-	// Overwriting existing key does not change Len().
+	// Overwriting existing key does not change Len(). Successful Put preserves
+	// key ordering and AVL balance invariants.
 	//
 	// Example: m.Put(3, "v")
 	Put(key K, value V)
 	// Get returns value for key.
 	//
-	// key is lookup key.
+	// key is lookup key. Get does not mutate map state.
 	// It returns (zero, false) when key is missing.
 	//
 	// Example: v, ok := m.Get(3)
 	Get(key K) (V, bool)
 	// Delete removes key when present.
 	//
-	// key is key to remove.
+	// key is key to remove. Successful Delete preserves key ordering and AVL
+	// balance invariants, including root deletion with zero, one, or two
+	// children.
 	// It returns false when key is missing.
 	//
 	// Example: ok := m.Delete(3)
 	Delete(key K) bool
 	// Has reports whether key exists.
 	//
-	// key is lookup key.
+	// key is lookup key. Has does not mutate map state.
 	//
 	// Example: ok := m.Has(3)
 	Has(key K) bool
 	// Min returns smallest key and its value.
 	//
-	// It returns (zeroK, zeroV, false) when map is empty.
+	// Min returns smallest key by comparator order and its value without mutating
+	// map state. It returns (zeroK, zeroV, false) when map is empty.
 	//
 	// Example: k, v, ok := m.Min()
 	Min() (K, V, bool)
 	// Max returns largest key and its value.
 	//
-	// It returns (zeroK, zeroV, false) when map is empty.
+	// Max returns largest key by comparator order and its value without mutating
+	// map state. It returns (zeroK, zeroV, false) when map is empty.
 	//
 	// Example: k, v, ok := m.Max()
 	Max() (K, V, bool)
@@ -54,9 +59,13 @@ type API[K any, V any] interface {
 	Len() int
 	// Clear removes all entries and resets map state.
 	//
+	// Clear is safe on an already-empty map, resets root and length state, and
+	// leaves comparator unchanged for future operations.
+	//
 	// Example: m.Clear()
 	Clear()
-	// Clone returns independent map copy with same length, comparator, and ascending key order.
+	// Clone returns independent map copy with same length, comparator, lookup
+	// results, ascending key order, and AVL validity.
 	//
 	// Keys and values are copied with normal Go assignment.
 	//
@@ -64,7 +73,11 @@ type API[K any, V any] interface {
 	Clone() *MapTreeAvl[K, V]
 	// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
 	//
-	// cloneKey and cloneValue receive each live key-value pair in ascending key order. When either hook is nil, CloneWith uses normal Go assignment for that payload type.
+	// CloneWith preserves length, comparator, ascending key order, AVL validity,
+	// and lookup results under transformed keys. cloneKey and cloneValue receive
+	// each live key-value pair once in ascending key order. Cloned keys must
+	// remain comparator-compatible. When either hook is nil, CloneWith uses
+	// normal Go assignment for that payload type.
 	//
 	// Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
 	CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapTreeAvl[K, V]

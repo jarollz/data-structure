@@ -6,7 +6,8 @@ import "iter"
 var _ API[int] = (*Heap[int])(nil)
 
 // Push implements the API interface.
-// Push inserts v and restores heap property, always returning true.
+// Push inserts v, grows backing storage before writing when full, restores heap
+// property, and always returns true.
 // v is value to insert.
 // Example: ok := h.Push(5)
 func (s *Heap[T]) Push(v T) bool {
@@ -23,6 +24,7 @@ func (s *Heap[T]) PopTop() (T, bool) {
 
 // PeekTop implements the API interface.
 // PeekTop returns heap top without removing it.
+// PeekTop does not change Len(), Cap(), heap shape, or internal array order.
 // It returns (zero, false) when heap is empty.
 // Example: v, ok := h.PeekTop()
 func (s *Heap[T]) PeekTop() (T, bool) {
@@ -38,6 +40,8 @@ func (s *Heap[T]) Len() int {
 
 // Cap implements the API interface.
 // Cap returns backing storage capacity.
+// Capacity starts at effective initial capacity and reflects later growth or
+// shrink decisions.
 // Example: c := h.Cap()
 func (s *Heap[T]) Cap() int {
 	panic("not implemented")
@@ -45,6 +49,8 @@ func (s *Heap[T]) Cap() int {
 
 // Clear implements the API interface.
 // Clear removes all elements and resets heap length state.
+// Clear is safe on an already-empty heap and leaves the heap ready for future
+// Push, PopTop, and PeekTop calls with same comparator.
 // Example: h.Clear()
 func (s *Heap[T]) Clear() {
 	panic("not implemented")
@@ -59,8 +65,12 @@ func (s *Heap[T]) Clone() *Heap[T] {
 }
 
 // CloneWith implements the API interface.
-// CloneWith returns independent heap copy using cloneValue for each live element.
-// cloneValue receives each live value in internal array order; nil means normal Go assignment.
+// CloneWith returns independent heap copy using cloneValue for each live
+// element.
+// CloneWith preserves Len(), Cap(), comparator, and internal heap-array order.
+// cloneValue receives each live value once in current internal array order,
+// not sorted order, and never sees unused capacity; nil means normal Go
+// assignment.
 // Example: cloned := h.CloneWith(func(v int) int { return v * 10 })
 func (s *Heap[T]) CloneWith(cloneValue func(T) T) *Heap[T] {
 	panic("not implemented")

@@ -22,13 +22,15 @@ Purpose
 
 Behavior expectations
 - [ ] Normalize `maxLevel < 1` to `1`.
+- [ ] Effective configured level count is `levelCap = max(1, maxLevel)`.
 - [ ] Returned skip list is non-nil and empty.
 - [ ] Comparator becomes persistent ordering rule for all future operations.
 - [ ] Deterministic RNG state starts from documented initial value.
 - [ ] `Len()` is `0` immediately after construction.
 
 Performance expectations
-- [ ] `O(1)` time.
+- [ ] `O(levelCap)` time.
+- [ ] `O(levelCap)` initial level-head storage.
 
 ### `Insert(v T) bool`
 Purpose
@@ -42,7 +44,8 @@ Behavior expectations
 - [ ] Deterministic RNG state advances exactly once per attempted insertion that reaches level generation.
 
 Performance expectations
-- [ ] Expected `O(log n)` time.
+- [ ] Expected `O(log n)` time when `levelCap` is configured to scale with population size.
+- [ ] If `levelCap` is too small for current `n`, performance degrades toward `O(n)`.
 - [ ] Worst-case single call may include node-pool growth copy.
 
 ### `Delete(v T) bool`
@@ -56,7 +59,8 @@ Behavior expectations
 - [ ] `currentLevel` shrinks when highest levels become empty.
 
 Performance expectations
-- [ ] Expected `O(log n)` time.
+- [ ] Expected `O(log n)` time when `levelCap` is configured to scale with population size.
+- [ ] If `levelCap` is too small for current `n`, performance degrades toward `O(n)`.
 
 ### `Has(v T) bool`
 Purpose
@@ -68,7 +72,8 @@ Behavior expectations
 - [ ] Empty list safely returns `false`.
 
 Performance expectations
-- [ ] Expected `O(log n)` time.
+- [ ] Expected `O(log n)` time when `levelCap` is configured to scale with population size.
+- [ ] If `levelCap` is too small for current `n`, performance degrades toward `O(n)`.
 
 ### `Len() int`
 Purpose
@@ -107,8 +112,8 @@ Behavior expectations
 - [ ] Future insert sequence on original and clone should choose same levels when operation sequence stays same.
 
 Performance expectations
-- [ ] `O(n)` time for `n = Len()`.
-- [ ] `O(n)` extra storage.
+- [ ] `O(levelCap * n)` time for `n = Len()`.
+- [ ] `O(levelCap * n)` extra storage.
 
 ### `CloneWith(cloneValue func(T) T) *SkipList[T]`
 Purpose
@@ -122,7 +127,7 @@ Behavior expectations
 - [ ] Hook is never called for reclaimed or free-list nodes.
 
 Performance expectations
-- [ ] `O(n)` container work plus hook cost.
+- [ ] `O(levelCap * n)` container work plus hook cost.
 
 ### `Values() iter.Seq[T]`
 Purpose
@@ -207,8 +212,9 @@ Performance expectations
 - [ ] After first correct implementation exists, rerun calibration on target machine and replace provisional targets with measured median-based thresholds.
 
 ### Layer 1: Complexity-growth thresholds
-- [ ] Expected `O(log n)` APIs must keep `ns/op(1e5) <= 2.5 * ns/op(1e3)`.
+- [ ] Expected `O(log n)` APIs must keep `ns/op(1e5) <= 2.5 * ns/op(1e3)` when `levelCap` is scaled appropriately for each benchmark size.
 - [ ] Expected `O(n)` APIs must compare normalized `(ns/op)/n` and keep normalized `1e5` result within `3.0x` of normalized `1e3` result.
+- [ ] Expected `O(levelCap * n)` APIs must compare normalized `(ns/op)/(levelCap*n)` and keep normalized `1e5` result within `3.0x` of normalized `1e3` result.
 - [ ] Mixed workloads are judged by dominant documented complexity of included operations.
 
 ### Layer 2: Absolute timing thresholds

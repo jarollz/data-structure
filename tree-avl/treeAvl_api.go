@@ -7,8 +7,8 @@ var _ API[int] = (*TreeAvl[int])(nil)
 
 // Insert implements the API interface.
 // Insert adds v into tree when v is not present.
-// v is value to insert.
-// It returns false on duplicate.
+// v is value to insert. It returns false on duplicate. Successful insert
+// preserves binary-search ordering and AVL balance invariants.
 // Example: ok := tree.Insert(10)
 func (s *TreeAvl[T]) Insert(v T) bool {
 	panic("not implemented")
@@ -16,8 +16,9 @@ func (s *TreeAvl[T]) Insert(v T) bool {
 
 // Delete implements the API interface.
 // Delete removes existing value v.
-// v is value to remove.
-// It returns false when v is missing.
+// v is value to remove. It returns false when v is missing. Successful delete
+// preserves binary-search ordering and AVL balance invariants, including root
+// deletion with zero, one, or two children.
 // Example: ok := tree.Delete(10)
 func (s *TreeAvl[T]) Delete(v T) bool {
 	panic("not implemented")
@@ -25,7 +26,7 @@ func (s *TreeAvl[T]) Delete(v T) bool {
 
 // Has implements the API interface.
 // Has reports whether value v exists in tree.
-// v is value to test.
+// v is value to test. Has does not mutate tree state.
 // Example: ok := tree.Has(10)
 func (s *TreeAvl[T]) Has(v T) bool {
 	panic("not implemented")
@@ -33,6 +34,7 @@ func (s *TreeAvl[T]) Has(v T) bool {
 
 // Min implements the API interface.
 // Min returns smallest stored value.
+// Min returns smallest value by comparator order without mutating tree state.
 // It returns (zero, false) when tree is empty.
 // Example: v, ok := tree.Min()
 func (s *TreeAvl[T]) Min() (T, bool) {
@@ -41,6 +43,7 @@ func (s *TreeAvl[T]) Min() (T, bool) {
 
 // Max implements the API interface.
 // Max returns largest stored value.
+// Max returns largest value by comparator order without mutating tree state.
 // It returns (zero, false) when tree is empty.
 // Example: v, ok := tree.Max()
 func (s *TreeAvl[T]) Max() (T, bool) {
@@ -56,13 +59,16 @@ func (s *TreeAvl[T]) Len() int {
 
 // Clear implements the API interface.
 // Clear removes all values and resets tree state.
+// Clear is safe on an already-empty tree, resets root and length state, and
+// leaves comparator unchanged for future operations.
 // Example: tree.Clear()
 func (s *TreeAvl[T]) Clear() {
 	panic("not implemented")
 }
 
 // Clone implements the API interface.
-// Clone returns independent tree copy with same length, comparator, and ascending in-order sequence.
+// Clone returns independent tree copy with same length, comparator, lookup
+// results, ascending in-order sequence, and AVL validity.
 // Values are copied with normal Go assignment.
 // Example: cloned := tree.Clone()
 func (s *TreeAvl[T]) Clone() *TreeAvl[T] {
@@ -71,7 +77,10 @@ func (s *TreeAvl[T]) Clone() *TreeAvl[T] {
 
 // CloneWith implements the API interface.
 // CloneWith returns independent tree copy using cloneValue for each live value.
-// cloneValue receives each live value in ascending in-order traversal; nil means normal Go assignment.
+// CloneWith preserves length, comparator, ascending in-order sequence, and AVL
+// validity. cloneValue receives each live value once in ascending in-order
+// traversal. Cloned values must remain comparator-compatible; nil means normal
+// Go assignment.
 // Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
 func (s *TreeAvl[T]) CloneWith(cloneValue func(T) T) *TreeAvl[T] {
 	panic("not implemented")

@@ -4,32 +4,38 @@ import "iter"
 
 // ListArray implements the API interface.
 //
-// ListArray stores values in index order and exposes list operations defined by API.
+// ListArray stores live elements in index order with growable array-backed list semantics.
 type ListArray[T any] struct{}
 
 // API defines array-backed list behavior.
 type API[T any] interface {
 	// Append adds v at tail and returns true.
 	//
-	// v is value to append.
+	// v is value to append. Append grows backing storage before writing when the
+	// list is full.
 	//
 	// Example: ok := list.Append(7)
 	Append(v T) bool
 	// Get returns value at i.
 	//
-	// i is zero-based index in [0, Len()). It returns (zero, false) when i is out of range.
+	// i is zero-based index in [0, Len()). Get does not mutate list state. It
+	// returns (zero, false) when i is out of range.
 	//
 	// Example: v, ok := list.Get(2)
 	Get(i int) (T, bool)
 	// Set overwrites value at i.
 	//
-	// i is zero-based index in [0, Len()); v is replacement value. It returns false when i is out of range.
+	// i is zero-based index in [0, Len()); v is replacement value. Set does not
+	// change Len(), Cap(), or relative order of other elements. It returns false
+	// when i is out of range.
 	//
 	// Example: ok := list.Set(1, 42)
 	Set(i int, v T) bool
 	// Insert inserts v before i.
 	//
-	// i accepts [0, Len()] where i == Len() appends; v is inserted value. It returns false when i is out of range.
+	// i accepts [0, Len()] where i == 0 inserts at head and i == Len() appends;
+	// v is inserted value. Insert preserves relative order of existing elements.
+	// It returns false when i is out of range.
 	//
 	// Example: ok := list.Insert(0, 9)
 	Insert(i int, v T) bool
@@ -45,9 +51,15 @@ type API[T any] interface {
 	Len() int
 	// Cap returns current backing capacity.
 	//
+	// Capacity starts at effective initial capacity and reflects later growth or
+	// shrink decisions.
+	//
 	// Example: c := list.Cap()
 	Cap() int
 	// Clear removes all elements and resets length state.
+	//
+	// Clear is safe on an already-empty list and leaves it ready for future
+	// Append, Insert, Get, Set, and Delete calls.
 	//
 	// Example: list.Clear()
 	Clear()
@@ -59,7 +71,9 @@ type API[T any] interface {
 	Clone() *ListArray[T]
 	// CloneWith returns independent list copy using cloneValue for each live element.
 	//
-	// cloneValue receives each live element in index order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	// CloneWith preserves Len(), Cap(), and index order. cloneValue receives each
+	// live element once in ascending index order and never sees unused capacity.
+	// When cloneValue is nil, CloneWith uses normal Go assignment.
 	//
 	// Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *ListArray[T]

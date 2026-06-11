@@ -13,6 +13,7 @@ This codebase is for personal practice and exploration of data structure impleme
 Data structures being explored correspond to top-level folders in this repository:
 
 - `map-hash/` - Hash map (open addressing and linear probing)
+- `map-trie/` - Trie map for string keys with prefix queries
 - `map-tree-avl/` - Ordered map implemented with AVL tree
 - `map-tree-red-black/` - Ordered map implemented with red-black tree
 - `heap/` - Heap data structure

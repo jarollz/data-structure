@@ -6,7 +6,8 @@ import "iter"
 var _ API[int] = (*ListArray[int])(nil)
 
 // Append implements the API interface.
-// Append appends v at list tail and always returns true.
+// Append appends v at list tail, grows backing storage before writing when
+// full, and always returns true.
 // v is value to append.
 // Example: ok := list.Append(7)
 func (s *ListArray[T]) Append(v T) bool {
@@ -15,7 +16,7 @@ func (s *ListArray[T]) Append(v T) bool {
 
 // Get implements the API interface.
 // Get returns value at index i when i is in [0, Len()), else (zero, false).
-// i is zero-based index to read.
+// i is zero-based index to read. Get does not mutate list state.
 // Example: v, ok := list.Get(2)
 func (s *ListArray[T]) Get(i int) (T, bool) {
 	panic("not implemented")
@@ -23,8 +24,9 @@ func (s *ListArray[T]) Get(i int) (T, bool) {
 
 // Set implements the API interface.
 // Set writes v to existing index i and returns true on success.
-// i is zero-based target index; v is replacement value.
-// It returns false when i is outside [0, Len()).
+// i is zero-based target index; v is replacement value. Set does not change
+// Len(), Cap(), or relative order of other elements. It returns false when i is
+// outside [0, Len()).
 // Example: ok := list.Set(1, 42)
 func (s *ListArray[T]) Set(i int, v T) bool {
 	panic("not implemented")
@@ -32,8 +34,9 @@ func (s *ListArray[T]) Set(i int, v T) bool {
 
 // Insert implements the API interface.
 // Insert places v before index i and shifts later elements right.
-// i accepts [0, Len()] where i == Len() appends; v is inserted value.
-// It returns false when i is outside [0, Len()].
+// i accepts [0, Len()] where i == 0 inserts at head and i == Len() appends; v
+// is inserted value. Insert preserves relative order of existing elements. It
+// returns false when i is outside [0, Len()].
 // Example: ok := list.Insert(0, 9)
 func (s *ListArray[T]) Insert(i int, v T) bool {
 	panic("not implemented")
@@ -57,6 +60,8 @@ func (s *ListArray[T]) Len() int {
 
 // Cap implements the API interface.
 // Cap returns backing storage capacity.
+// Capacity starts at effective initial capacity and reflects later growth or
+// shrink decisions.
 // Example: c := list.Cap()
 func (s *ListArray[T]) Cap() int {
 	panic("not implemented")
@@ -64,6 +69,8 @@ func (s *ListArray[T]) Cap() int {
 
 // Clear implements the API interface.
 // Clear removes all elements and resets list length.
+// Clear is safe on an already-empty list and leaves the list ready for future
+// Append, Insert, Get, Set, and Delete calls.
 // Example: list.Clear()
 func (s *ListArray[T]) Clear() {
 	panic("not implemented")
@@ -78,15 +85,18 @@ func (s *ListArray[T]) Clone() *ListArray[T] {
 }
 
 // CloneWith implements the API interface.
-// CloneWith returns independent list copy using cloneValue for each live element.
-// cloneValue receives each live element in index order; nil means normal Go assignment.
+// CloneWith returns independent list copy using cloneValue for each live
+// element.
+// CloneWith preserves Len(), Cap(), and index order. cloneValue receives each
+// live element once in ascending index order and never sees unused capacity;
+// nil means normal Go assignment.
 // Example: cloned := list.CloneWith(func(v int) int { return v * 10 })
 func (s *ListArray[T]) CloneWith(cloneValue func(T) T) *ListArray[T] {
 	panic("not implemented")
 }
 
 // Values implements the API interface.
-// Values yields elements in index order from 0 to Len()-1.
+// Values yields elements in ascending index order from 0 to Len()-1.
 // Sequence yields each live element once, supports early stop, and yields nothing when empty.
 // Mutation during iteration is not safe.
 // Example: for v := range list.Values() { _ = v }

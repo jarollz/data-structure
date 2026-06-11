@@ -20,14 +20,14 @@ Purpose
 
 Behavior expectations
 - [ ] Normalize `capacity <= 0` to `16`.
-- [ ] Effective starting capacity is `max(16, capacity)`.
+- [ ] Effective starting capacity is `startCap = max(16, capacity)`.
 - [ ] Returned stack is non-nil and empty.
 - [ ] `Len()` is `0` immediately after construction.
 - [ ] `Cap()` is normalized starting capacity immediately after construction.
 
 Performance expectations
-- [ ] `O(1)` time.
-- [ ] `O(capacity)` backing storage.
+- [ ] `O(startCap)` time.
+- [ ] `O(startCap)` backing storage.
 
 Implementation checklist
 - [ ] Store explicit logical length.
@@ -130,8 +130,8 @@ Behavior expectations
 - [ ] Empty source produces empty independent clone with same `Cap()`.
 
 Performance expectations
-- [ ] `O(n)` time for `n = Len()`.
-- [ ] `O(n)` extra storage.
+- [ ] `O(Cap())` time.
+- [ ] `O(Cap())` extra storage.
 
 Implementation checklist
 - [ ] Copy only live elements.
@@ -149,7 +149,7 @@ Behavior expectations
 - [ ] Hook is never called for unused capacity slots.
 
 Performance expectations
-- [ ] `O(n)` container work plus hook cost.
+- [ ] `O(Cap())` container work plus hook cost.
 
 Implementation checklist
 - [ ] Apply hook only to live elements.

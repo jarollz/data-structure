@@ -4,7 +4,8 @@ import "iter"
 
 // TreeGeneral implements the API interface.
 //
-// TreeGeneral stores hierarchical n-ary nodes with stable integer IDs.
+// TreeGeneral stores hierarchical n-ary nodes with stable integer IDs and
+// preserved holes after subtree removal.
 type TreeGeneral[T any] struct{}
 
 // API defines general tree behavior.
@@ -12,14 +13,17 @@ type API[T any] interface {
 	// AddChild adds new last child of parentID.
 	//
 	// parentID is existing parent node ID; value is child value.
-	// It returns (childID, true) on success, or (-1, false) for invalid parent or empty tree.
+	// It returns (childID, true) on success, or (-1, false) for invalid parent,
+	// removed parent, or empty tree. Child IDs are stable, monotonically
+	// increasing, and never reused.
 	//
 	// Example: childID, ok := tree.AddChild(0, "leaf")
 	AddChild(parentID int, value T) (childID int, ok bool)
 	// RemoveSubtree removes nodeID and all descendants.
 	//
-	// nodeID is subtree root to remove.
-	// It returns false for invalid IDs. Removing root (0) makes tree empty.
+	// nodeID is subtree root to remove. Invalid or already-removed IDs return
+	// false. Removing root (0) makes tree empty. Removed IDs stay as holes, and
+	// future child IDs keep increasing past all previously allocated IDs.
 	//
 	// Example: ok := tree.RemoveSubtree(3)
 	RemoveSubtree(nodeID int) bool
@@ -48,7 +52,8 @@ type API[T any] interface {
 	//
 	// Example: n := tree.Len()
 	Len() int
-	// Clone returns independent tree copy with same live IDs, removed-ID holes, child order, and next-ID progression.
+	// Clone returns independent tree copy with same live IDs, removed-ID holes,
+	// child order, parent links, root ID, and next-ID progression.
 	//
 	// Node values are copied with normal Go assignment.
 	//
@@ -56,13 +61,17 @@ type API[T any] interface {
 	Clone() *TreeGeneral[T]
 	// CloneWith returns independent tree copy using cloneValue for each live node.
 	//
-	// cloneValue receives each live value in pre-order. When cloneValue is nil, CloneWith uses normal Go assignment.
+	// CloneWith preserves live IDs, removed-ID holes, child order, parent links,
+	// root ID, and next-ID progression. cloneValue receives each live value once
+	// in pre-order and never sees removed-ID holes. When cloneValue is nil,
+	// CloneWith uses normal Go assignment.
 	//
 	// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *TreeGeneral[T]
 	// PreOrder yields values parent-before-children.
 	//
-	// Sequence yields each live node once, supports early stop when yield returns false, and yields nothing when tree is empty.
+	// Sibling order is preserved. Sequence yields each live node once, supports
+	// early stop when yield returns false, and yields nothing when tree is empty.
 	// Mutation during iteration is not safe.
 	//
 	// Example: for v := range tree.PreOrder() { _ = v }

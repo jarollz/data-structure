@@ -6,7 +6,8 @@ import "iter"
 var _ API[int] = (*Stack[int])(nil)
 
 // Push implements the API interface.
-// Push puts v on top and always returns true.
+// Push puts v on top, grows backing storage before writing when full, and
+// always returns true.
 // v is value to push.
 // Example: ok := s.Push(1)
 func (s *Stack[T]) Push(v T) bool {
@@ -23,7 +24,8 @@ func (s *Stack[T]) Pop() (T, bool) {
 
 // PeekTop implements the API interface.
 // PeekTop returns top value without removal.
-// It returns (zero, false) on empty stack.
+// PeekTop does not change Len(), Cap(), or top-to-bottom order. It returns
+// (zero, false) on empty stack.
 // Example: v, ok := s.PeekTop()
 func (s *Stack[T]) PeekTop() (T, bool) {
 	panic("not implemented")
@@ -38,6 +40,8 @@ func (s *Stack[T]) Len() int {
 
 // Cap implements the API interface.
 // Cap returns backing storage capacity.
+// Capacity starts at effective initial capacity and reflects later growth or
+// shrink decisions.
 // Example: c := s.Cap()
 func (s *Stack[T]) Cap() int {
 	panic("not implemented")
@@ -45,6 +49,8 @@ func (s *Stack[T]) Cap() int {
 
 // Clear implements the API interface.
 // Clear removes all elements and resets stack state.
+// Clear is safe on an already-empty stack and leaves the stack ready for
+// future Push calls and empty Pop or PeekTop calls.
 // Example: s.Clear()
 func (s *Stack[T]) Clear() {
 	panic("not implemented")
@@ -59,8 +65,11 @@ func (s *Stack[T]) Clone() *Stack[T] {
 }
 
 // CloneWith implements the API interface.
-// CloneWith returns independent stack copy using cloneValue for each live element.
-// cloneValue receives each live value from top to bottom; nil means normal Go assignment.
+// CloneWith returns independent stack copy using cloneValue for each live
+// element.
+// CloneWith preserves Len(), Cap(), and top-to-bottom order. cloneValue
+// receives each live value once from top to bottom and never sees unused
+// capacity; nil means normal Go assignment.
 // Example: cloned := s.CloneWith(func(v int) int { return v * 10 })
 func (s *Stack[T]) CloneWith(cloneValue func(T) T) *Stack[T] {
 	panic("not implemented")

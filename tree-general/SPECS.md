@@ -116,8 +116,9 @@ Behavior expectations
 - [ ] Empty source remains empty in clone and preserves future ID progression.
 
 Performance expectations
-- [ ] `O(n)` time in total stored ID range used by clone strategy.
-- [ ] `O(n)` extra storage.
+- [ ] Let `idRange` be next allocated ID, covering live IDs plus removed-ID holes in `[0, idRange)`.
+- [ ] `O(idRange)` time.
+- [ ] `O(idRange)` extra storage.
 
 ### `CloneWith(cloneValue func(T) T) *Tree[T]`
 Purpose
@@ -131,7 +132,8 @@ Behavior expectations
 - [ ] Hook is never called for removed-ID holes.
 
 Performance expectations
-- [ ] `O(n)` container work plus hook cost.
+- [ ] Let `idRange` be next allocated ID, covering live IDs plus removed-ID holes in `[0, idRange)`.
+- [ ] `O(idRange)` container work plus hook cost.
 
 ### `PreOrder() iter.Seq[T]`
 Purpose
@@ -216,6 +218,7 @@ Performance expectations
 ### Layer 1: Complexity-growth thresholds
 - [ ] Expected `O(1)` APIs must keep `ns/op(1e5) <= 3.0 * ns/op(1e3)`.
 - [ ] Expected `O(n)` APIs must compare normalized `(ns/op)/n` and keep normalized `1e5` result within `3.0x` of normalized `1e3` result.
+- [ ] Expected `O(idRange)` APIs must compare normalized `(ns/op)/idRange` and keep normalized `1e5` result within `3.0x` of normalized `1e3` result.
 
 ### Layer 2: Absolute timing thresholds
 - [ ] Absolute thresholds are per API, per payload class, and per benchmark size.

@@ -7,8 +7,8 @@ var _ API[int, string] = (*MapTreeAvl[int, string])(nil)
 
 // Put implements the API interface.
 // Put inserts key-value pair or overwrites existing key.
-// key is lookup key; value is payload to store.
-// Overwrite keeps Len() unchanged.
+// key is lookup key; value is payload to store. Overwrite keeps Len()
+// unchanged. Successful Put preserves key ordering and AVL balance invariants.
 // Example: m.Put(3, "v")
 func (s *MapTreeAvl[K, V]) Put(key K, value V) {
 	panic("not implemented")
@@ -16,7 +16,7 @@ func (s *MapTreeAvl[K, V]) Put(key K, value V) {
 
 // Get implements the API interface.
 // Get returns value for key.
-// key is lookup key.
+// key is lookup key. Get does not mutate map state.
 // It returns (zero, false) when key is missing.
 // Example: v, ok := m.Get(3)
 func (s *MapTreeAvl[K, V]) Get(key K) (V, bool) {
@@ -25,8 +25,9 @@ func (s *MapTreeAvl[K, V]) Get(key K) (V, bool) {
 
 // Delete implements the API interface.
 // Delete removes key when present.
-// key is key to remove.
-// It returns false when key is missing.
+// key is key to remove. It returns false when key is missing. Successful
+// Delete preserves key ordering and AVL balance invariants, including root
+// deletion with zero, one, or two children.
 // Example: ok := m.Delete(3)
 func (s *MapTreeAvl[K, V]) Delete(key K) bool {
 	panic("not implemented")
@@ -34,7 +35,7 @@ func (s *MapTreeAvl[K, V]) Delete(key K) bool {
 
 // Has implements the API interface.
 // Has reports whether key exists.
-// key is lookup key.
+// key is lookup key. Has does not mutate map state.
 // Example: ok := m.Has(3)
 func (s *MapTreeAvl[K, V]) Has(key K) bool {
 	panic("not implemented")
@@ -42,7 +43,8 @@ func (s *MapTreeAvl[K, V]) Has(key K) bool {
 
 // Min implements the API interface.
 // Min returns smallest key and associated value.
-// It returns (zeroK, zeroV, false) when map is empty.
+// Min returns smallest key by comparator order and its value without mutating
+// map state. It returns (zeroK, zeroV, false) when map is empty.
 // Example: k, v, ok := m.Min()
 func (s *MapTreeAvl[K, V]) Min() (K, V, bool) {
 	panic("not implemented")
@@ -50,7 +52,8 @@ func (s *MapTreeAvl[K, V]) Min() (K, V, bool) {
 
 // Max implements the API interface.
 // Max returns largest key and associated value.
-// It returns (zeroK, zeroV, false) when map is empty.
+// Max returns largest key by comparator order and its value without mutating
+// map state. It returns (zeroK, zeroV, false) when map is empty.
 // Example: k, v, ok := m.Max()
 func (s *MapTreeAvl[K, V]) Max() (K, V, bool) {
 	panic("not implemented")
@@ -65,13 +68,16 @@ func (s *MapTreeAvl[K, V]) Len() int {
 
 // Clear implements the API interface.
 // Clear removes all entries and resets map state.
+// Clear is safe on an already-empty map, resets root and length state, and
+// leaves comparator unchanged for future operations.
 // Example: m.Clear()
 func (s *MapTreeAvl[K, V]) Clear() {
 	panic("not implemented")
 }
 
 // Clone implements the API interface.
-// Clone returns independent map copy with same length, comparator, and ascending key order.
+// Clone returns independent map copy with same length, comparator, lookup
+// results, ascending key order, and AVL validity.
 // Keys and values are copied with normal Go assignment.
 // Example: cloned := m.Clone()
 func (s *MapTreeAvl[K, V]) Clone() *MapTreeAvl[K, V] {
@@ -79,8 +85,13 @@ func (s *MapTreeAvl[K, V]) Clone() *MapTreeAvl[K, V] {
 }
 
 // CloneWith implements the API interface.
-// CloneWith returns independent map copy using cloneKey and cloneValue for each live entry.
-// cloneKey and cloneValue receive each live key-value pair in ascending key order; nil means normal Go assignment for that payload type.
+// CloneWith returns independent map copy using cloneKey and cloneValue for
+// each live entry.
+// CloneWith preserves length, comparator, ascending key order, AVL validity,
+// and lookup results under transformed keys. cloneKey and cloneValue receive
+// each live key-value pair once in ascending key order. Cloned keys must
+// remain comparator-compatible; nil means normal Go assignment for that
+// payload type.
 // Example: cloned := m.CloneWith(func(k int) int { return k }, func(v string) string { return v + "!" })
 func (s *MapTreeAvl[K, V]) CloneWith(cloneKey func(K) K, cloneValue func(V) V) *MapTreeAvl[K, V] {
 	panic("not implemented")
