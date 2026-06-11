@@ -22,7 +22,8 @@ func (s *ListLinkedSingly[T]) PopFront() (T, bool) {
 }
 
 // Append implements the API interface.
-// Append adds v at tail in O(1) time using tracked tail.
+// Append adds v at tail in O(1) time using tracked tail state.
+// Implementation must not rescan from head to find tail.
 // v is appended value.
 // Example: list.Append(9)
 func (s *ListLinkedSingly[T]) Append(v T) {

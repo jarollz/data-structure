@@ -1,4 +1,4 @@
-.PHONY: test test-cover
+.PHONY: test test-cover bench
 
 MODULES_RAW := $(shell go list -m)
 MODULES := $(filter github.com/jarollz/data-structure/%,$(MODULES_RAW))
@@ -11,3 +11,6 @@ test-cover:
 	mkdir -p tmp
 	go test $(PKGS) -coverprofile=tmp/coverage.out
 	go tool cover -func=tmp/coverage.out | tee tmp/coverage.txt
+
+bench:
+	go test $(PKGS) -run ^$$ -bench . -benchmem

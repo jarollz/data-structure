@@ -61,7 +61,7 @@ Implement a generic singly linked list.
 
 ## Benchmark checklist
 - [ ] PushFront/PopFront throughput.
-- [ ] Append throughput (with and without tail tracking).
+- [ ] Append throughput for contracted O(1) tail-tracked Append.
 - [ ] Full iteration benchmark.
 
 ## Test Generator Hints
@@ -69,9 +69,10 @@ Implement a generic singly linked list.
 - Validate traversal length equals `Len()` and no cycles are introduced.
 - Use randomized operation streams and oracle comparison for final order.
 - Iterator tests must verify head-to-tail order and early stop.
+- Benchmarks must target contracted public API behavior.
 
 ## AI Prompt Snippets
 - Unit tests: "Generate table-driven tests for singly linked list API covering empty operations, delete-first cases, and append behavior."
 - Property tests: "Generate randomized list mutations with fixed seed and verify no-cycle + length invariants after each batch."
 - Iterator tests: "Generate tests for `Values() iter.Seq[T]` enforcing head-to-tail order, count, early stop, and mutation-unsafety note."
-- Benchmarks: "Generate singly linked list benchmarks for push/pop-front, append, and full traversal at 1e3/1e4/1e5."
+- Benchmarks: "Generate singly linked list benchmarks for push/pop-front, contracted O(1) append, and full traversal at 1e3/1e4/1e5."

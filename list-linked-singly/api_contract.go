@@ -21,7 +21,9 @@ type API[T any] interface {
 	//
 	// Example: v, ok := list.PopFront()
 	PopFront() (T, bool)
-	// Append adds v at list tail in O(1) time.
+	// Append adds v at list tail in O(1) time using tracked tail state.
+	//
+	// Implementation must not rescan from head to find tail.
 	//
 	// v is value to append.
 	//

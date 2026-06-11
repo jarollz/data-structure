@@ -30,6 +30,7 @@ In this repository, the implementation must use an index-based node pool backed 
 
 ## Implementation notes
 - Track the head index, tail index, free-list head, and length.
+- Tail tracking is required by contract, not optional optimization.
 - Use `-1` as the nil sentinel index.
 - When the node pool is full, allocate larger arrays and copy node fields by index.
 
