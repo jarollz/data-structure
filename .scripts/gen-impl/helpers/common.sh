@@ -42,7 +42,7 @@ run_with_timeout() {
 strip_ansi_to_file() {
   local input_file="$1"
   local output_file="$2"
-  perl -pe 's/\e\[[0-9;?]*[ -\\/]*[@-~]//g; s/\r/\n/g' "$input_file" >"$output_file"
+  perl -pe 's/\e\[[0-?]*[ -~]*[@-~]//g; s/\r/\n/g' "$input_file" >"$output_file"
 }
 
 last_non_empty_line() {
