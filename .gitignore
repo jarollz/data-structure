@@ -1,3 +1,10 @@
 .opencode/
 tmp/
 __pycache__/
+
+# VS Code
+.vscode/
+
+# GoLand / JetBrains
+.idea/
+*.iml
