@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import re
 import subprocess
 import sys
@@ -27,6 +28,7 @@ BENCH_RE = re.compile(r"func\s+Benchmark[A-Za-z0-9_]*\s*\(", re.MULTILINE)
 MAP_RE = re.compile(r"\bmap\s*\[")
 SLICE_RE = re.compile(r"\[\]\s*[*A-Za-z_\[]")
 SIZE_RE = re.compile(r"\b(1e3|1e4|1e5|1000|10000|100000)\b")
+ITER_CONTRACT_RE = re.compile(r"^\s*([A-Z][A-Za-z0-9_]*)\([^)]*\)\s+iter\.Seq2?\[", re.MULTILINE)
 
 
 @dataclass
@@ -77,12 +79,24 @@ class RunMetadata:
     command_execution: str
 
 
+@dataclass
+class SkippedFolder:
+    folder: str
+    reason: str
+
+
 def run(cmd: list[str], cwd: Path) -> tuple[bool, str]:
     proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True)
     text = (proc.stdout or "") + (proc.stderr or "")
     text = text.strip().replace("\n", " ")
     if len(text) > 260:
         text = text[:257] + "..."
+    return proc.returncode == 0, text
+
+
+def run_full(cmd: list[str], cwd: Path) -> tuple[bool, str]:
+    proc = subprocess.run(cmd, cwd=str(cwd), text=True, capture_output=True)
+    text = ((proc.stdout or "") + (proc.stderr or "")).strip()
     return proc.returncode == 0, text
 
 
@@ -97,7 +111,68 @@ def normalize_targets(targets: list[str]) -> list[str]:
     return out
 
 
-def discover_folders(repo: Path) -> list[str]:
+def normalize_go_work_path(disk_path: str, repo: Path) -> str:
+    if not disk_path:
+        raise ValueError("root go.work contains an empty use entry")
+    if disk_path.startswith("/"):
+        raise ValueError(f"root go.work entry '{disk_path}' must be relative")
+
+    raw = disk_path[2:] if disk_path.startswith("./") else disk_path
+    parts = [part for part in Path(raw).parts if part not in {".", ""}]
+    if ".." in parts:
+        raise ValueError(f"root go.work entry '{disk_path}' must not contain '..'")
+    if len(parts) != 1:
+        raise ValueError(f"root go.work entry '{disk_path}' must point to a top-level folder")
+
+    folder = parts[0]
+    folder_path = repo / folder
+    if not folder_path.exists() or not folder_path.is_dir():
+        raise ValueError(f"root go.work entry '{disk_path}' points to missing directory: {folder}")
+
+    resolved_repo = repo.resolve()
+    resolved_folder = folder_path.resolve()
+    if resolved_folder.parent != resolved_repo:
+        raise ValueError(f"root go.work entry '{disk_path}' points outside repo root")
+    return folder
+
+
+def discover_go_work_folders(repo: Path) -> list[str]:
+    go_work = repo / "go.work"
+    if not go_work.exists():
+        raise ValueError(f"missing root go.work: {go_work}")
+
+    ok, out = run_full(["go", "work", "edit", "-json"], repo)
+    if not ok:
+        raise ValueError(f"'go work edit -json' failed: {out or 'no output'}")
+
+    try:
+        data = json.loads(out)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON from 'go work edit -json': {exc}") from exc
+
+    use_entries = data.get("Use")
+    if not isinstance(use_entries, list):
+        raise ValueError("root go.work contains an invalid use entry")
+    if not use_entries:
+        raise ValueError("root go.work contains no use entries")
+
+    names: list[str] = []
+    for entry in use_entries:
+        if not isinstance(entry, dict):
+            raise ValueError("root go.work contains an invalid use entry")
+        if "DiskPath" not in entry:
+            raise ValueError("root go.work contains a use entry without DiskPath")
+        disk_path = entry["DiskPath"]
+        if not isinstance(disk_path, str):
+            raise ValueError("root go.work contains an invalid use entry")
+        folder = normalize_go_work_path(disk_path, repo)
+        if folder in names:
+            raise ValueError(f"root go.work lists duplicate folder '{folder}'")
+        names.append(folder)
+    return names
+
+
+def discover_specs_folders(repo: Path) -> list[str]:
     names: list[str] = []
     for child in sorted(repo.iterdir(), key=lambda p: p.name):
         if child.is_dir() and (child / "SPECS.md").exists():
@@ -105,8 +180,32 @@ def discover_folders(repo: Path) -> list[str]:
     return names
 
 
-def required_api_names(specs_text: str) -> list[str]:
-    names: list[str] = []
+def discover_assessable_folders(repo: Path) -> tuple[list[str], list[SkippedFolder]]:
+    registered = discover_go_work_folders(repo)
+    specs_folders = discover_specs_folders(repo)
+    specs_set = set(specs_folders)
+    registered_set = set(registered)
+
+    assessable = [folder for folder in registered if folder in specs_set]
+    skipped: list[SkippedFolder] = []
+
+    for folder in registered:
+        if folder not in specs_set:
+            skipped.append(
+                SkippedFolder(folder, "listed in root `go.work` but missing `SPECS.md`")
+            )
+
+    for folder in specs_folders:
+        if folder not in registered_set:
+            skipped.append(
+                SkippedFolder(folder, "has `SPECS.md` but is not registered in root `go.work`")
+            )
+
+    return assessable, skipped
+
+
+def required_api_signatures(specs_text: str) -> list[str]:
+    signatures: list[str] = []
     in_required = False
     for line in specs_text.splitlines():
         if line.startswith("## "):
@@ -119,28 +218,90 @@ def required_api_names(specs_text: str) -> list[str]:
             continue
         body = m.group(1)
         for token in BT_RE.findall(body):
-            if "(" not in token:
-                continue
-            head = token.split("(", 1)[0].strip()
-            k = re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", head)
-            if k:
-                names.append(k.group(0))
+            if "(" in token:
+                signatures.append(token)
                 break
-    dedup: list[str] = []
-    for n in names:
-        if n not in dedup:
-            dedup.append(n)
-    return dedup
+    return signatures
 
 
-def expected_iterator(folder: str) -> str:
-    if folder.startswith("map-"):
-        return "All"
-    if folder in {"tree-avl", "tree-red-black"}:
-        return "InOrder"
-    if folder == "tree-general":
-        return "PreOrder"
-    return "Values"
+def method_name(signature: str) -> str | None:
+    head = signature.split("(", 1)[0].strip()
+    m = re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", head)
+    return m.group(0) if m else None
+
+
+def dedup_names(names: list[str]) -> list[str]:
+    out: list[str] = []
+    for name in names:
+        if name and name not in out:
+            out.append(name)
+    return out
+
+
+def required_api_names(specs_text: str) -> list[str]:
+    names: list[str] = []
+    for signature in required_api_signatures(specs_text):
+        name = method_name(signature)
+        if name:
+            names.append(name)
+    return dedup_names(names)
+
+
+def iterator_api_names(specs_text: str, api_contract_text: str) -> tuple[list[str], list[str], list[str]]:
+    specs_iterators: list[str] = []
+    for signature in required_api_signatures(specs_text):
+        if "iter.Seq" not in signature:
+            continue
+        name = method_name(signature)
+        if name:
+            specs_iterators.append(name)
+
+    api_iterators = dedup_names([m.group(1) for m in ITER_CONTRACT_RE.finditer(api_contract_text)])
+    combined = dedup_names(specs_iterators + api_iterators)
+    return combined, dedup_names(specs_iterators), api_iterators
+
+
+def parse_root_iterator_names(agents_text: str) -> set[str]:
+    names: set[str] = set()
+    in_section = False
+    for line in agents_text.splitlines():
+        if line.startswith("## "):
+            in_section = line.strip().lower() == "## iterator naming standard"
+            continue
+        if not in_section or not line.lstrip().startswith("-"):
+            continue
+        for token in BT_RE.findall(line):
+            if "iter.Seq" not in token:
+                continue
+            name = method_name(token)
+            if name:
+                names.add(name)
+    return names
+
+
+def parse_overview_primary_iterators(overview_text: str) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    for line in overview_text.splitlines():
+        if not line.startswith("| `"):
+            continue
+        cols = [col.strip() for col in line.split("|")[1:-1]]
+        if len(cols) < 4:
+            continue
+        folder_tokens = BT_RE.findall(cols[0])
+        iter_tokens = BT_RE.findall(cols[3])
+        if not folder_tokens or not iter_tokens:
+            continue
+        folder = folder_tokens[0]
+        name = method_name(iter_tokens[0])
+        if name:
+            mapping[folder] = name
+    return mapping
+
+
+def read_root_contracts(repo: Path) -> tuple[str, str]:
+    agents_path = repo / "AGENTS.md"
+    overview_path = repo / "STRUCTURE-OVERVIEW.md"
+    return agents_path.read_text(encoding="utf-8"), overview_path.read_text(encoding="utf-8")
 
 
 def extract_public_funcs(texts: list[str]) -> set[str]:
@@ -279,12 +440,20 @@ def run_bench_command(repo: Path, folder: str) -> tuple[bool, list[str], bool, l
     return fb_ok, evidence, True, fallback_reasons
 
 
-def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
+def assess_folder(
+    repo: Path,
+    folder: str,
+    run_commands: bool,
+    allowed_iterators: set[str],
+    overview_primary_iterators: dict[str, str],
+) -> FolderResult:
     base = repo / folder
     specs_path = base / "SPECS.md"
+    api_contract_path = base / "api_contract.go"
     readme_ok = (base / "README.md").exists()
     specs_ok = specs_path.exists()
     specs_text = specs_path.read_text(encoding="utf-8") if specs_ok else ""
+    api_contract_text = api_contract_path.read_text(encoding="utf-8") if api_contract_path.exists() else ""
     checklist = parse_checklist(specs_text)
 
     go_files = sorted(base.glob("*.go"))
@@ -299,6 +468,9 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     api_required = required_api_names(specs_text)
     api_found = extract_public_funcs(impl_texts)
     missing_api = [n for n in api_required if n not in api_found]
+    iterator_methods, specs_iterators, api_contract_iterators = iterator_api_names(
+        specs_text, api_contract_text
+    )
 
     has_tests = False
     if test_texts:
@@ -314,15 +486,8 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
         if SLICE_RE.search(content):
             no_slice = False
 
-    iterator_name = expected_iterator(folder)
-    iterator_impl_ok = iterator_name in api_found
-    iterator_test_ok = has_tests and (
-        "iterator" in test_blob_low
-        or "values(" in test_blob_low
-        or "all(" in test_blob_low
-        or "inorder(" in test_blob_low
-        or "preorder(" in test_blob_low
-    )
+    iterator_impl_ok = bool(iterator_methods) and all(name in api_found for name in iterator_methods)
+    iterator_test_cov = method_coverage_ratio(iterator_methods, test_blob_low) if iterator_methods else 0.0
     invariant_test_ok = has_tests and (
         "invariant" in test_blob_low
         or "len(" in test_blob_low
@@ -331,6 +496,20 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     )
     random_oracle_ok = has_tests and ("random" in test_blob_low or "oracle" in test_blob_low)
     api_cov = method_coverage_ratio(api_required, test_blob_low)
+
+    contract_issues: list[str] = []
+    if specs_iterators and api_contract_iterators and set(specs_iterators) != set(api_contract_iterators):
+        contract_issues.append("iterator contract differs between `SPECS.md` and `api_contract.go`")
+    invalid_iterators = [name for name in iterator_methods if allowed_iterators and name not in allowed_iterators]
+    if invalid_iterators:
+        contract_issues.append(
+            "iterator names violate root `AGENTS.md`: " + ", ".join(invalid_iterators)
+        )
+    overview_primary = overview_primary_iterators.get(folder)
+    if overview_primary and overview_primary not in iterator_methods:
+        contract_issues.append(
+            f"`STRUCTURE-OVERVIEW.md` expects primary iterator `{overview_primary}`"
+        )
 
     command_evidence: list[str] = []
     fallback_reasons: list[str] = []
@@ -372,6 +551,8 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     api_score = 0
     if api_required:
         api_score = int(round(25 * (len(api_required) - len(missing_api)) / len(api_required)))
+    if contract_issues and api_score > 0:
+        api_score = max(0, api_score - 5)
 
     storage_score = 0
     if has_impl and no_map and no_slice:
@@ -384,8 +565,8 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
         behavior_score += 4
     if iterator_impl_ok:
         behavior_score += 4
-    if iterator_impl_ok and iterator_test_ok:
-        behavior_score += 6
+    if iterator_impl_ok:
+        behavior_score += int(round(6 * iterator_test_cov))
     if invariant_test_ok:
         behavior_score += 6
 
@@ -393,8 +574,7 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
     if has_tests:
         tests_score += 6
         tests_score += int(round(6 * api_cov))
-        if iterator_test_ok:
-            tests_score += 4
+        tests_score += int(round(4 * iterator_test_cov))
         if random_oracle_ok:
             tests_score += 4
 
@@ -455,6 +635,8 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
         findings.append(f"`{folder}` required test command evidence failed or missing.")
     if bench_required and (not bench_ran or not bench_ok):
         findings.append(f"`{folder}` required benchmark command evidence failed or missing.")
+    for issue in contract_issues:
+        findings.append(f"`{folder}` {issue}.")
 
     weak_evidence = [
         "Invariant points require direct invariant test evidence.",
@@ -487,7 +669,16 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
             "API compliance",
             api_score,
             25,
-            "all required API names found" if not missing_api else f"missing methods: {', '.join(missing_api)}",
+            "all required API names found"
+            if not missing_api and not contract_issues
+            else "; ".join(
+                part
+                for part in [
+                    (f"missing methods: {', '.join(missing_api)}" if missing_api else ""),
+                    ("contract issues: " + "; ".join(contract_issues) if contract_issues else ""),
+                ]
+                if part
+            ),
         ),
         Category(
             "Storage and forbidden-feature compliance",
@@ -502,7 +693,7 @@ def assess_folder(repo: Path, folder: str, run_commands: bool) -> FolderResult:
             behavior_score,
             20,
             "iterator+invariant behavior proven by tests"
-            if iterator_test_ok and invariant_test_ok
+            if iterator_test_cov == 1.0 and invariant_test_ok
             else "partial behavior proof from implementation/tests",
         ),
         Category(
@@ -571,18 +762,34 @@ def render_table(results: list[FolderResult]) -> str:
 
 
 def render_run_metadata(meta: RunMetadata) -> str:
+    targets = ", ".join(meta.targets) if meta.targets else "(none)"
     lines = [
         "## Run Metadata",
         "",
         f"- Mode: `{meta.mode}`",
-        f"- Targets: `{', '.join(meta.targets)}`",
+        f"- Targets: `{targets}`",
         f"- Command policy: `{meta.command_policy}`",
         f"- Command execution: `{meta.command_execution}`",
     ]
     return "\n".join(lines)
 
 
-def render_report(repo: Path, results: list[FolderResult], timestamp: str, meta: RunMetadata) -> str:
+def render_skipped(title: str, skipped: list[SkippedFolder]) -> str:
+    if not skipped:
+        return ""
+    lines = [title, ""]
+    for item in skipped:
+        lines.append(f"- skipped `{item.folder}`: {item.reason}")
+    return "\n".join(lines)
+
+
+def render_report(
+    repo: Path,
+    results: list[FolderResult],
+    timestamp: str,
+    meta: RunMetadata,
+    skipped: list[SkippedFolder],
+) -> str:
     lines: list[str] = []
     lines.append("# Implementation Assessment")
     lines.append("")
@@ -593,12 +800,22 @@ def render_report(repo: Path, results: list[FolderResult], timestamp: str, meta:
     lines.append("")
     lines.append(render_run_metadata(meta))
     lines.append("")
+    if skipped:
+        lines.append(render_skipped("## Skipped Folders", skipped))
+        lines.append("")
+    if not results:
+        lines.append("- No assessable folders.")
+        lines.append("")
     lines.append("## Summary Table")
     lines.append("")
     lines.append(render_table(results))
     lines.append("")
     lines.append("## Folder Findings")
     lines.append("")
+
+    if not results:
+        lines.append("- none")
+        lines.append("")
 
     for r in results:
         lines.append(f"### {r.folder}")
@@ -660,7 +877,7 @@ def main() -> int:
         "--folders",
         nargs="*",
         default=[],
-        help="Scoped folders. Default: auto-discover from */SPECS.md",
+        help="Scoped folders. Default: discover from root go.work, then require SPECS.md",
     )
     parser.add_argument(
         "--skip-commands",
@@ -670,7 +887,20 @@ def main() -> int:
     args = parser.parse_args()
 
     repo = Path(args.repo).resolve()
-    all_folders = discover_folders(repo)
+    try:
+        all_folders, skipped = discover_assessable_folders(repo)
+        agents_text, overview_text = read_root_contracts(repo)
+        specs_folders = set(discover_specs_folders(repo))
+        registered_folders = set(discover_go_work_folders(repo))
+    except (OSError, ValueError) as exc:
+        print(exc)
+        return 2
+
+    allowed_iterators = parse_root_iterator_names(agents_text)
+    overview_primary_iterators = parse_overview_primary_iterators(overview_text)
+    all_folder_set = set(all_folders)
+    skipped_map = {item.folder: item.reason for item in skipped}
+
     targets = normalize_targets(args.folders)
     scoped = len(targets) > 0
 
@@ -678,16 +908,22 @@ def main() -> int:
         targets = all_folders
 
     invalid: list[str] = []
+    selected: list[str] = []
     for t in targets:
         if t.startswith("/") or ".." in t or "/" in t:
             invalid.append(t)
             continue
-        if t not in all_folders:
+        if t in all_folder_set:
+            selected.append(t)
+            continue
+        if t in skipped_map:
+            continue
+        if t not in specs_folders and t not in registered_folders:
             invalid.append(t)
             continue
 
     if invalid:
-        print("Invalid targets (must be top-level folders with SPECS.md):")
+        print("Invalid targets (must be top-level folders registered in root go.work and/or containing SPECS.md):")
         for t in invalid:
             print(f"- {t}")
         return 2
@@ -696,20 +932,34 @@ def main() -> int:
     mode = "scoped" if scoped else "whole-repo"
     metadata = RunMetadata(
         mode=mode,
-        targets=sorted(targets),
+        targets=selected if scoped else all_folders,
         command_policy="strict-hard; make test-folder/bench-folder per folder; fallback only on make infra failure",
         command_execution="enabled" if run_commands else "disabled",
     )
 
-    results = [assess_folder(repo, f, run_commands=run_commands) for f in targets]
+    results = [
+        assess_folder(
+            repo,
+            f,
+            run_commands=run_commands,
+            allowed_iterators=allowed_iterators,
+            overview_primary_iterators=overview_primary_iterators,
+        )
+        for f in metadata.targets
+    ]
     results.sort(key=lambda x: x.folder)
 
     table = render_table(results)
 
     print(f"Run mode: {metadata.mode}")
-    print(f"Targets: {', '.join(metadata.targets)}")
+    print(f"Targets: {', '.join(metadata.targets) if metadata.targets else '(none)'}")
     print(f"Command policy: {metadata.command_policy}")
     print(f"Command execution: {metadata.command_execution}\n")
+    if skipped:
+        print(render_skipped("## Warnings", skipped))
+        print("")
+    if not results:
+        print("No assessable folders.\n")
     print("## Summary Table\n")
     print(table)
 
@@ -718,9 +968,9 @@ def main() -> int:
     out_dir = repo / "tmp"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"assessment_{ts_file}.md"
-    out_path.write_text(render_report(repo, results, ts_text, metadata), encoding="utf-8")
+    out_path.write_text(render_report(repo, results, ts_text, metadata, skipped), encoding="utf-8")
     print(f"\nReport: {out_path}")
-    return 0
+    return 0 if results else 2
 
 
 if __name__ == "__main__":

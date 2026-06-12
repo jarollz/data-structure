@@ -28,6 +28,12 @@ python3 .agents/skills/assess-implementation/resources/assess_impl.py --skip-com
 
 ## Command policy
 
+- Folder discovery comes from root `go.work` via `go work edit -json`.
+- Assessable folder must be top-level, listed in root `go.work`, and contain `SPECS.md`.
+- If folder is listed in root `go.work` but missing `SPECS.md`, helper skips it with warning.
+- If top-level folder has `SPECS.md` but is not listed in root `go.work`, helper skips it with warning.
+- Warning block is printed to terminal and written into report whenever any folder is skipped.
+
 - Strict-hard mode uses per-folder commands in both whole-repo and scoped runs:
   - `make test-folder FOLDER=<folder>`
   - `make bench-folder FOLDER=<folder>` when benchmark funcs exist
@@ -43,8 +49,10 @@ python3 .agents/skills/assess-implementation/resources/assess_impl.py --skip-com
 ## Output
 
 - Prints run metadata and `## Summary Table` markdown block to terminal.
+- Prints `## Warnings` block when any folder is skipped.
 - Terminal output must include table header and data rows (not prose-only summary).
 - Writes full report to `tmp/assessment_YYYYMMDD_HHMMSS.md`.
+- Report includes `## Skipped Folders` when any folder is skipped.
 
 ## Important
 

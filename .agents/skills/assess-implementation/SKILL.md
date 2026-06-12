@@ -18,7 +18,7 @@ No benefit of doubt. Missing proof counts as failure.
 
 ## Scope
 
-Default mode: assess every top-level structure folder discovered from `*/SPECS.md`.
+Default mode: assess every top-level structure folder discovered from root `go.work` that also contains `SPECS.md`.
 
 Scoped mode: if user says `invoke the skill assess-implementation only for folder xxxx` or `invoke the skill assess-implementation only for folders xxxx, yyyy`, assess only requested folders.
 
@@ -30,29 +30,23 @@ Scoped mode rules:
 - Accept multiple requested targets in comma-separated, space-separated, or individually quoted/backticked forms when intent is clear.
 - Deduplicate normalized target folders before assessment.
 - Reject absolute paths, parent traversal such as `../`, and non-top-level paths.
-- Every requested target folder must exist and contain its own `SPECS.md`.
+- Assessable target must be registered in root `go.work` and contain its own `SPECS.md`.
+- If requested target is listed in root `go.work` but missing `SPECS.md`, skip it with warning.
+- If requested target contains `SPECS.md` but is not registered in root `go.work`, skip it with warning.
+- If every requested target is skipped, print warnings, print `No assessable folders.`, write report, and exit nonzero.
 - In scoped mode, do not assess any structure folders outside selected target set.
 - In scoped mode, terminal table contains data rows for selected targets only.
 - In scoped mode, full markdown report contains summary and findings for selected targets only.
-- If any requested target is missing, ambiguous, or lacks `SPECS.md`, stop and report invalid targets instead of silently falling back to whole-repo assessment.
+- If requested target is missing or invalid, stop and report invalid targets instead of silently falling back to whole-repo assessment.
 
-Assess every top-level structure folder discovered from `*/SPECS.md`, including:
+Discovery rules:
 
-- `map-hash`
-- `map-tree-avl`
-- `map-tree-red-black`
-- `heap`
-- `list-array`
-- `list-linked-singly`
-- `list-linked-doubly`
-- `list-skip`
-- `queue`
-- `stack`
-- `tree-general`
-- `tree-avl`
-- `tree-red-black`
-
-If more structure folders exist later, include them automatically when they contain `SPECS.md`.
+- Run from repo root.
+- Read root `go.work`.
+- Assess folders in root `go.work` order only.
+- Assess folder only when top-level folder is registered in root `go.work` and also contains `SPECS.md`.
+- If top-level folder is listed in root `go.work` but missing `SPECS.md`, skip it with warning.
+- If top-level folder contains `SPECS.md` but is not listed in root `go.work`, skip it with warning.
 
 ## Invocation Examples
 
@@ -82,6 +76,7 @@ Preferred helper commands:
 - Read root `AGENTS.md` first.
 - Read root `STRUCTURE-OVERVIEW.md` second.
 - Read each folder `SPECS.md` before grading that folder.
+- Read each folder `api_contract.go` and use it to cross-check iterator contract.
 - Inspect implementation `.go` files separately from tests and benchmarks.
 - Treat files ending in `_test.go` as tests only.
 - Treat benchmark functions as real only when they use `func Benchmark...`.
@@ -133,7 +128,8 @@ Check implementation files only. Ignore test-only use of slices or maps.
 
 - Public constructor and methods required by folder `SPECS.md` exist.
 - Naming matches contract exactly.
-- Iterator naming matches root `AGENTS.md` and `STRUCTURE-OVERVIEW.md`.
+- Iterator methods come from folder contracts, not hardcoded folder-name guesses.
+- Iterator naming matches root `AGENTS.md` and primary iterator in `STRUCTURE-OVERVIEW.md`.
 - Return shapes and edge-case behavior are supported by code and tests.
 
 ### 5. Invariants And Behavior
@@ -228,6 +224,8 @@ If command streaming hides or drops stdout table in agent view, recover by readi
 
 In scoped mode, both outputs must contain only requested folders.
 
+If any folder is skipped, both terminal output and markdown report must include warning bullets naming every skipped folder and reason.
+
 Create `tmp/` first if missing.
 
 Filename pattern:
@@ -277,6 +275,10 @@ Write markdown file with this structure:
 - Timestamp: <ISO-like timestamp>
 - Inputs: `AGENTS.md`, `STRUCTURE-OVERVIEW.md`, each folder `SPECS.md`
 - Policy: strict evidence only, no benefit of doubt
+
+## Skipped Folders
+
+- `folder`: skipped reason
 
 ## Summary Table
 
@@ -344,13 +346,16 @@ Suggest these only after completing repo-based grading. These are outside direct
 2. Detect whether user requested scoped mode with one or more exact folder names or repo-relative folder paths.
 3. If scoped mode requested, normalize allowed repo-relative forms to canonical top-level folder names.
 4. If scoped mode requested, deduplicate targets.
-5. If scoped mode requested, validate every target folder has `SPECS.md`; otherwise stop with invalid-target message listing bad targets.
-6. If scoped mode not requested, enumerate structure folders from `*/SPECS.md`.
+5. Read root `go.work` and discover top-level registered folders in root `go.work` order.
+6. Discover top-level folders containing `SPECS.md`.
+7. Compute assessable folders as intersection of root `go.work` folders and top-level `SPECS.md` folders.
+8. Record skipped-folder warnings for mismatches from either side.
+9. If scoped mode requested, keep requested assessable targets only; requested mismatches become warnings, invalid targets still fail.
 7. Run bundled helper script from `.agents/skills/assess-implementation/resources/assess_impl.py`.
 8. Run per-folder strict-hard command checks: `make test-folder FOLDER=<folder>` and optional `make bench-folder FOLDER=<folder>`.
 9. Apply strict-hard command-evidence score caps when required commands fail or are missing.
 10. Ensure parser uses strict checkbox and backticked-signature extraction rules.
-11. Print run metadata and markdown summary table to terminal.
-12. Write full markdown report to `tmp/assessment_YYYYMMDD_HHMMSS.md` including run metadata and cap reasons.
-13. Verify terminal output contains summary table header and at least one data row; if missing, print table recovered from report.
+11. Print run metadata, skipped-folder warnings when present, and markdown summary table to terminal.
+12. Write full markdown report to `tmp/assessment_YYYYMMDD_HHMMSS.md` including run metadata, skipped folders when present, and cap reasons.
+13. Verify terminal output contains summary table header; if missing, print table recovered from report.
 14. End with short list of human-only extra assessments.
