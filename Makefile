@@ -31,11 +31,11 @@ define ensure_version
 endef
 
 test:
-	go test $(PKGS)
+	go test -race $(PKGS)
 
 test-cover:
 	mkdir -p tmp
-	go test $(PKGS) -coverprofile=tmp/coverage.out
+	go test -race $(PKGS) -coverprofile=tmp/coverage.out
 	go tool cover -func=tmp/coverage.out | tee tmp/coverage.txt
 
 bench:
@@ -43,7 +43,7 @@ bench:
 
 test-folder:
 	$(call ensure_folder,test-folder)
-	go test $(FOLDER_MODULE)/...
+	go test -race $(FOLDER_MODULE)/...
 
 bench-folder:
 	$(call ensure_folder,bench-folder)

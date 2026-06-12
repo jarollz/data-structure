@@ -108,7 +108,7 @@ def run_go_test_json_with_timeout(
     progress_callback: Callable[[float, str | None], None] | None = None,
 ) -> bool:
     return _run_to_log(
-        ["go", "test", "-json", f"./{folder}/..."],
+        ["go", "test", "-race", "-json", f"./{folder}/..."],
         cwd=repo_root,
         timeout_seconds=timeout_seconds,
         output_log=output_log,

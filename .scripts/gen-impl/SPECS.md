@@ -438,7 +438,7 @@ go run .scripts/gen-impl/helpers/audit_doc_comments.go --folder {folder}
 Unit test command:
 
 ```text
-go test -json ./{folder}/...
+go test -race -json ./{folder}/...
 ```
 
 Benchmark command:

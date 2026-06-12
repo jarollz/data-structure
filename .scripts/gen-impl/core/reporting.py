@@ -485,24 +485,27 @@ def runtime_failure_cause_from_log(log_file: Path, domain: str) -> tuple[str, st
     if marker is not None:
         scenario = marker
 
-    detail: str | None = None
-    cause = ""
-    for line in lines:
-        panic_match = re.search(r"\bpanic:\s*(.+)$", line)
-        if panic_match:
-            detail = panic_match.group(1).strip()
-            cause = "Runtime panic"
-            break
-        fatal_match = re.search(r"\bfatal error:\s*(.+)$", line)
-        if fatal_match:
-            detail = fatal_match.group(1).strip()
-            cause = "Fatal runtime error"
-            break
-        signal_match = re.search(r"\bsignal:\s*([^\s].*)$", line)
-        if signal_match:
-            detail = signal_match.group(1).strip()
-            cause = "Process terminated by signal"
-            break
+    detail = _data_race_detail(lines)
+    if detail is not None:
+        cause = "Data race detected"
+    else:
+        cause = ""
+        for line in lines:
+            panic_match = re.search(r"\bpanic:\s*(.+)$", line)
+            if panic_match:
+                detail = panic_match.group(1).strip()
+                cause = "Runtime panic"
+                break
+            fatal_match = re.search(r"\bfatal error:\s*(.+)$", line)
+            if fatal_match:
+                detail = fatal_match.group(1).strip()
+                cause = "Fatal runtime error"
+                break
+            signal_match = re.search(r"\bsignal:\s*([^\s].*)$", line)
+            if signal_match:
+                detail = signal_match.group(1).strip()
+                cause = "Process terminated by signal"
+                break
 
     if detail is None:
         for line in lines:
@@ -532,6 +535,21 @@ def runtime_failure_cause_from_log(log_file: Path, domain: str) -> tuple[str, st
     folder = _infer_folder_from_path(log_file)
     code_target = _extract_code_target(lines, scenario)
     return (cause, scenario, evidence, _runtime_failure_suggestion(cause, detail, scenario, domain, code_target, folder))
+
+
+def _data_race_detail(lines: list[str]) -> str | None:
+    for idx, line in enumerate(lines):
+        if "WARNING: DATA RACE" not in line and line != "DATA RACE":
+            continue
+        for follow in lines[idx + 1 :]:
+            lower = follow.lower()
+            if lower.startswith("read at ") or lower.startswith("write at "):
+                return f"{line} -> {follow}"
+            if lower.startswith("previous read at ") or lower.startswith("previous write at "):
+                return f"{line} -> {follow}"
+        return line
+
+    return None
 
 
 def failure_improvement_suggestions_from_causes(
@@ -603,8 +621,20 @@ def _runtime_failure_suggestion(
     folder: str | None,
 ) -> str:
     verify_command = _benchmark_verify_command(folder) if domain == "benchmark" else _operational_verify_command(folder, scenario)
-    pass_signal = "benchmark exits 0 without panic" if domain == "benchmark" else "go test exits 0 with no panic"
+    pass_signal = (
+        "benchmark exits 0 without panic"
+        if domain == "benchmark"
+        else "go test -race exits 0 with no panic or race report"
+    )
     lower = detail.lower()
+    if cause == "Data race detected":
+        return _format_retry_suggestion(
+            "Data race detected",
+            code_target,
+            "isolate shared mutable state, remove concurrent read/write paths, and honor iterator mutation-unsafety contract before rerun",
+            verify_command,
+            pass_signal,
+        )
     if "capacity exhausted" in lower:
         return _format_retry_suggestion(
             "Runtime panic (capacity exhausted)",
@@ -704,8 +734,8 @@ def _benchmark_verify_command(folder: str | None) -> str:
 def _operational_verify_command(folder: str | None, scenario: str) -> str:
     resolved = folder if folder else "<folder>"
     if scenario and not scenario.startswith("("):
-        return f"go test -json ./{resolved}/... -run ^{re.escape(scenario)}$"
-    return f"go test -json ./{resolved}/..."
+        return f"go test -race -json ./{resolved}/... -run ^{re.escape(scenario)}$"
+    return f"go test -race -json ./{resolved}/..."
 
 
 def _infer_folder_from_path(path: Path) -> str | None:

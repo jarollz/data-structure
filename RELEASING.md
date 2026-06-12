@@ -35,7 +35,8 @@ Each module has its own semantic version stream.
 
 ## Release checklist
 
-1. Run tests for target module folder (for example `make test-folder FOLDER=stack`).
+1. Run race-enabled tests for target module folder (for example `make test-folder FOLDER=stack`).
+   - `make test`, `make test-folder`, and `make test-cover` run `go test -race`.
 2. Create and push tag with guard:
    - `make tag FOLDER=stack VERSION=v1.2.3`
    - or shorthand: `make tag stack v1.2.3`

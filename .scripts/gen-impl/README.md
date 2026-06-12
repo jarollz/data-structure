@@ -153,7 +153,7 @@ Each implementation attempt must pass, in order:
 
 1. scope and protected-file enforcement
 2. doc-comment audit
-3. `go test -json ./<folder>/...`
+3. `go test -race -json ./<folder>/...`
 
 After implementation attempts finish, the script runs full benchmark validation once for reporting:
 
