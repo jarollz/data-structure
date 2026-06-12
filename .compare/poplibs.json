@@ -1,0 +1,1256 @@
+{
+  "heap": [
+    {
+      "import_name": "github.com/emirpasic/gods/trees/binaryheap",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Peek",
+          "confidence": 0.9
+        },
+        {
+          "internal": "PopTop",
+          "external": "Pop",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Push",
+          "external": "Push",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/fibheap",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Min",
+          "confidence": 0.77
+        },
+        {
+          "internal": "PopTop",
+          "external": "DequeueMin",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Push",
+          "external": "Enqueue",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/zyedidia/generic/heap",
+      "git_url": "https://github.com/zyedidia/generic",
+      "common_apis": [
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Peek",
+          "confidence": 0.9
+        },
+        {
+          "internal": "PopTop",
+          "external": "Pop",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Push",
+          "external": "Push",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "list-array": [
+    {
+      "import_name": "github.com/emirpasic/gods/lists/arraylist",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Append",
+          "external": "Add",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Set",
+          "external": "Set",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/list",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Append",
+          "external": "Add",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Length",
+          "confidence": 0.91
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/gammazero/deque",
+      "git_url": "https://github.com/gammazero/deque",
+      "common_apis": [
+        {
+          "internal": "Append",
+          "external": "PushBack",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Cap",
+          "external": "Cap",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "At",
+          "confidence": 0.77
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Set",
+          "external": "Set",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "list-linked-doubly": [
+    {
+      "import_name": "github.com/emirpasic/gods/lists/doublylinkedlist",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PushBack",
+          "external": "Append",
+          "confidence": 0.85
+        },
+        {
+          "internal": "PushFront",
+          "external": "Prepend",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/zyedidia/generic/list",
+      "git_url": "https://github.com/zyedidia/generic",
+      "common_apis": [
+        {
+          "internal": "PushBack",
+          "external": "PushBack",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PushFront",
+          "external": "PushFront",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/gammazero/deque",
+      "git_url": "https://github.com/gammazero/deque",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PopBack",
+          "external": "PopBack",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PopFront",
+          "external": "PopFront",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PushBack",
+          "external": "PushBack",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PushFront",
+          "external": "PushFront",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "list-linked-singly": [
+    {
+      "import_name": "github.com/emirpasic/gods/lists/singlylinkedlist",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Append",
+          "external": "Append",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PushFront",
+          "external": "Prepend",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/list",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "DeleteFirst",
+          "external": "Remove",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Len",
+          "external": "Length",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PushFront",
+          "external": "Add",
+          "confidence": 0.74
+        }
+      ]
+    }
+  ],
+  "list-skip": [
+    {
+      "import_name": "github.com/Workiva/go-datastructures/rangetree/skiplist",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Insert",
+          "external": "Add",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/huandu/skiplist",
+      "git_url": "https://github.com/huandu/skiplist",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Insert",
+          "external": "Set",
+          "confidence": 0.77
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "map-hash": [
+    {
+      "import_name": "github.com/emirpasic/gods/maps/hashmap",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Get",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Put",
+          "external": "Put",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/hashmap/fastinteger",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Cap",
+          "external": "Cap",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Exists",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Set",
+          "confidence": 0.77
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/zyedidia/generic/hashmap",
+      "git_url": "https://github.com/zyedidia/generic",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Put",
+          "external": "Put",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "map-tree-avl": [
+    {
+      "import_name": "github.com/emirpasic/gods/maps/treemap",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "All",
+          "external": "Each",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Put",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/tree/avl",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Insert",
+          "confidence": 0.77
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/tidwall/btree",
+      "git_url": "https://github.com/tidwall/btree",
+      "common_apis": [
+        {
+          "internal": "All",
+          "external": "Ascend",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Set",
+          "confidence": 0.77
+        }
+      ]
+    }
+  ],
+  "map-tree-red-black": [
+    {
+      "import_name": "github.com/emirpasic/gods/maps/treemap",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "All",
+          "external": "Each",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Put",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/tree/avl",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Insert",
+          "confidence": 0.77
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/tidwall/btree",
+      "git_url": "https://github.com/tidwall/btree",
+      "common_apis": [
+        {
+          "internal": "All",
+          "external": "Ascend",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Set",
+          "confidence": 0.77
+        }
+      ]
+    }
+  ],
+  "map-trie": [
+    {
+      "import_name": "github.com/hashicorp/go-immutable-radix",
+      "git_url": "https://github.com/hashicorp/go-immutable-radix",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Insert",
+          "confidence": 0.77
+        },
+        {
+          "internal": "WithPrefix",
+          "external": "Root",
+          "confidence": 0.71
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/armon/go-radix",
+      "git_url": "https://github.com/armon/go-radix",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Insert",
+          "confidence": 0.77
+        },
+        {
+          "internal": "WithPrefix",
+          "external": "WalkPrefix",
+          "confidence": 0.85
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/dghubble/trie",
+      "git_url": "https://github.com/dghubble/trie",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Get",
+          "external": "Get",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Put",
+          "external": "Put",
+          "confidence": 1.0
+        },
+        {
+          "internal": "WithPrefix",
+          "external": "WalkPath",
+          "confidence": 0.74
+        }
+      ]
+    }
+  ],
+  "queue": [
+    {
+      "import_name": "github.com/emirpasic/gods/queues/arrayqueue",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Dequeue",
+          "external": "Dequeue",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Enqueue",
+          "external": "Enqueue",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekFront",
+          "external": "Peek",
+          "confidence": 0.9
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/queue",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Dequeue",
+          "external": "Get",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Enqueue",
+          "external": "Put",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PeekFront",
+          "external": "Peek",
+          "confidence": 0.9
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/zyedidia/generic/queue",
+      "git_url": "https://github.com/zyedidia/generic",
+      "common_apis": [
+        {
+          "internal": "Dequeue",
+          "external": "Dequeue",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Enqueue",
+          "external": "Enqueue",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PeekFront",
+          "external": "Peek",
+          "confidence": 0.9
+        }
+      ]
+    }
+  ],
+  "stack": [
+    {
+      "import_name": "github.com/emirpasic/gods/stacks/arraystack",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Peek",
+          "confidence": 0.9
+        },
+        {
+          "internal": "Pop",
+          "external": "Pop",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Push",
+          "external": "Push",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Values",
+          "external": "Values",
+          "confidence": 0.98
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/zyedidia/generic/stack",
+      "git_url": "https://github.com/zyedidia/generic",
+      "common_apis": [
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Peek",
+          "confidence": 0.9
+        },
+        {
+          "internal": "Pop",
+          "external": "Pop",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Push",
+          "external": "Push",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/gammazero/deque",
+      "git_url": "https://github.com/gammazero/deque",
+      "common_apis": [
+        {
+          "internal": "Cap",
+          "external": "Cap",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "PeekTop",
+          "external": "Back",
+          "confidence": 0.77
+        },
+        {
+          "internal": "Pop",
+          "external": "PopBack",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Push",
+          "external": "PushBack",
+          "confidence": 0.85
+        }
+      ]
+    }
+  ],
+  "tree-avl": [
+    {
+      "import_name": "github.com/emirpasic/gods/trees/avltree",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Has",
+          "external": "Get",
+          "confidence": 0.74
+        },
+        {
+          "internal": "InOrder",
+          "external": "Iterator",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Insert",
+          "external": "Put",
+          "confidence": 0.77
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/Workiva/go-datastructures/tree/avl",
+      "git_url": "https://github.com/Workiva/go-datastructures",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Get",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/tidwall/btree",
+      "git_url": "https://github.com/tidwall/btree",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Contains",
+          "confidence": 0.86
+        },
+        {
+          "internal": "InOrder",
+          "external": "Ascend",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ],
+  "tree-general": [],
+  "tree-red-black": [
+    {
+      "import_name": "github.com/emirpasic/gods/trees/redblacktree",
+      "git_url": "https://github.com/emirpasic/gods",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Remove",
+          "confidence": 0.86
+        },
+        {
+          "internal": "Has",
+          "external": "Get",
+          "confidence": 0.74
+        },
+        {
+          "internal": "InOrder",
+          "external": "Iterator",
+          "confidence": 0.74
+        },
+        {
+          "internal": "Insert",
+          "external": "Put",
+          "confidence": 0.77
+        },
+        {
+          "internal": "Len",
+          "external": "Size",
+          "confidence": 0.91
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/tidwall/btree",
+      "git_url": "https://github.com/tidwall/btree",
+      "common_apis": [
+        {
+          "internal": "Clear",
+          "external": "Clear",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Contains",
+          "confidence": 0.86
+        },
+        {
+          "internal": "InOrder",
+          "external": "Ascend",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Insert",
+          "external": "Insert",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        }
+      ]
+    },
+    {
+      "import_name": "github.com/petar/GoLLRB/llrb",
+      "git_url": "https://github.com/petar/GoLLRB",
+      "common_apis": [
+        {
+          "internal": "Delete",
+          "external": "Delete",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Has",
+          "external": "Has",
+          "confidence": 1.0
+        },
+        {
+          "internal": "InOrder",
+          "external": "AscendGreaterOrEqual",
+          "confidence": 0.75
+        },
+        {
+          "internal": "Insert",
+          "external": "ReplaceOrInsert",
+          "confidence": 0.85
+        },
+        {
+          "internal": "Len",
+          "external": "Len",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Max",
+          "external": "Max",
+          "confidence": 1.0
+        },
+        {
+          "internal": "Min",
+          "external": "Min",
+          "confidence": 1.0
+        }
+      ]
+    }
+  ]
+}
