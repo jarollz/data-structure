@@ -41,6 +41,13 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return raw == "1"
 
 
+def _env_str(name: str, default: str = "") -> str:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip()
+
+
 @dataclass(frozen=True)
 class Config:
     repo_root: Path
@@ -54,6 +61,7 @@ class Config:
     doc_audit_timeout_seconds: int
     test_timeout_seconds: int
     bench_timeout_seconds: int
+    ai_spawner_command: str
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -71,4 +79,5 @@ class Config:
             doc_audit_timeout_seconds=_env_int("DOC_AUDIT_TIMEOUT_SECONDS", 300),
             test_timeout_seconds=_env_int("TEST_TIMEOUT_SECONDS", 900),
             bench_timeout_seconds=_env_int("BENCH_TIMEOUT_SECONDS", 1800),
+            ai_spawner_command=_env_str("AI_SPAWNER_COMMAND", ""),
         )

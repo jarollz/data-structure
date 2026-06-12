@@ -565,7 +565,12 @@ def run(cfg: Config, target: str) -> int:
     ensure_dir_writable(reports_root, "reports root")
 
     targets = _resolve_targets(target)
-    spawner_command = prompt_for_spawner_command(run_root, cfg.repo_root, cfg.probe_timeout_seconds)
+    spawner_command = prompt_for_spawner_command(
+        run_root,
+        cfg.repo_root,
+        cfg.probe_timeout_seconds,
+        cfg.ai_spawner_command,
+    )
 
     summary_tsv = run_root / "summary.tsv"
     write_text(summary_tsv, "")

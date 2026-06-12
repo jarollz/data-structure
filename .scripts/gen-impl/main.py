@@ -20,6 +20,7 @@ Environment:
   FORCE=1             Ignore fresh SUCCESS report and rerun folder.
   STOP_ON_FAILURE=1   Stop after first failed folder in all mode.
   MAX_ATTEMPTS=5      Maximum implementation attempts per folder.
+  AI_SPAWNER_COMMAND  Full spawner command template with [prompt].
 """
 
 

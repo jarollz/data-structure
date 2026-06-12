@@ -35,7 +35,7 @@ Supported folders:
 
 ## AI Spawner Command
 
-The script prompts for the full AI spawner command at runtime:
+By default, the script prompts for the full AI spawner command at runtime:
 
 ```text
 AI agent spawner command (must have [prompt] in it):
@@ -52,6 +52,18 @@ Example accepted input:
 
 ```text
 opencode run --dangerously-skip-permissions [prompt]
+```
+
+Non-interactive mode:
+
+- Set `AI_SPAWNER_COMMAND` to skip interactive input.
+- The command in `AI_SPAWNER_COMMAND` is validated and probed before folder processing starts.
+- If validation or probe fails, the script exits immediately (no interactive fallback).
+
+Example:
+
+```bash
+AI_SPAWNER_COMMAND='opencode run --dangerously-skip-permissions [prompt]' ./.scripts/gen-impl/gen.sh list-array
 ```
 
 ## Single-Folder Flow
@@ -158,6 +170,7 @@ Artifacts include prompts, AI output logs, validation logs, attempt summaries, p
 - `FORCE=1`: ignore fresh `SUCCESS` report and rerun.
 - `STOP_ON_FAILURE=1`: stop early in `all` mode after first failure.
 - `MAX_ATTEMPTS=5`: override implementation retry count.
+- `AI_SPAWNER_COMMAND`: set full AI spawner command template and run non-interactively.
 - `PROBE_TIMEOUT_SECONDS`: override spawner probe timeout.
 - `SPAWNER_TIMEOUT_SECONDS`: override AI run timeout.
 - `DOC_AUDIT_TIMEOUT_SECONDS`: override doc-comment audit timeout.

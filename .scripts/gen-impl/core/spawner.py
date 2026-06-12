@@ -168,7 +168,25 @@ def probe_spawner_command(
     return _last_non_empty_line(clean_output) == "Hello"
 
 
-def prompt_for_spawner_command(run_root: Path, repo_root: Path, probe_timeout_seconds: int) -> str:
+def prompt_for_spawner_command(
+    run_root: Path,
+    repo_root: Path,
+    probe_timeout_seconds: int,
+    preset_command: str = "",
+) -> str:
+    if preset_command:
+        ok, reason = validate_spawner_command_syntax(preset_command)
+        if not ok:
+            raise RuntimeError(f"AI_SPAWNER_COMMAND invalid: {reason}")
+
+        probe_dir = run_root / "spawner_probe_env"
+        if probe_spawner_command(preset_command, probe_dir, probe_timeout_seconds, repo_root):
+            return preset_command
+        raise RuntimeError(
+            "AI_SPAWNER_COMMAND probe command failed or final output was not Hello. "
+            f"Review {probe_dir / 'probe_clean.log'}"
+        )
+
     attempt = 1
     while True:
         try:
