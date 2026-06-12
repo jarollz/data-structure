@@ -80,7 +80,7 @@ This is an evolving learning project; folder contents may change over time as im
 ## Implementation Generator
 
 Use `./.scripts/gen-impl/gen.sh <folder>` to generate or regenerate one structure implementation, or `./.scripts/gen-impl/gen.sh all` to process every supported folder sequentially.
-The script prompts for a full AI spawner command that must contain an unquoted `[prompt]` placeholder, writes run artifacts under `tmp/gen-impl/runs/`, and expects each folder run to end with `<folder>/IMPLEMENTATION_REPORT.md`.
+The script prompts for a full AI spawner command that must contain an unquoted `[prompt]` placeholder, writes run artifacts under `tmp/gen-impl/runs/`, and stores each folder report at `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md`.
 
 ## AI Assessment Skill
 

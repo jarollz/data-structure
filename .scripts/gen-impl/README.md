@@ -58,12 +58,12 @@ opencode run --dangerously-skip-permissions [prompt]
 
 For one folder, the script:
 
-1. Reads `<folder>/IMPLEMENTATION_REPORT.md` when present.
+1. Reads `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` when present.
 2. Skips the folder only when the report says `SUCCESS` and the report file is newer than every non-test implementation `.go` file.
 3. If the report is missing or says `FAILURE` and implementation `.go` files already exist, runs a reset phase first so the next implementation attempt starts fresh.
 4. Runs up to `MAX_ATTEMPTS` implementation attempts.
 5. Verifies each attempt with doc-comment audit, unit tests, and benchmark tests.
-6. Runs a final AI report phase to write `<folder>/IMPLEMENTATION_REPORT.md`.
+6. Runs a final AI report phase to write `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md`.
 
 ## all Mode
 
@@ -107,7 +107,7 @@ Implementation attempts must not modify:
 - `go.sum`
 - files outside the target folder
 
-During implementation and reset phases, `IMPLEMENTATION_REPORT.md` is also protected.
+During implementation and reset phases, the report path `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` is also protected.
 
 If protected or out-of-scope files are edited, the script restores them from a phase snapshot and marks the attempt as failed.
 
@@ -133,7 +133,7 @@ Each implementation attempt must pass, in order:
 
 ## Report Contract
 
-The final report must be written to `<folder>/IMPLEMENTATION_REPORT.md` and must contain:
+The final report must be written to `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` and must contain:
 
 - `Operation Status: SUCCESS` or `Operation Status: FAILURE`
 - `Folder: <folder>`
@@ -176,4 +176,4 @@ If an attempt fails repeatedly:
 
 - read the latest attempt summary under `tmp/gen-impl/runs/.../<folder>/attempt_<n>/summary.md`
 - read the corresponding test or benchmark logs
-- review the previous `IMPLEMENTATION_REPORT.md` suggestions before rerunning
+- review the previous report under `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` before rerunning
