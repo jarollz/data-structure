@@ -74,19 +74,9 @@ This is an evolving learning project; folder contents may change over time as im
 - Agent working rules: `AGENTS.md`
 - Release and tagging conventions: `RELEASING.md`
 - Per-structure implementation specs: each folder `SPECS.md`
-- Manual AI skill for grading implementations: `.agents/skills/assess-implementation/SKILL.md`
 - AI implementation generator script: `.scripts/gen-impl/gen.sh`
 
 ## Implementation Generator
 
 Use `./.scripts/gen-impl/gen.sh <folder|all>` to generate or regenerate structure implementations through an external AI spawner command.
 Full documentation: `.scripts/gen-impl/README.md`.
-
-## AI Assessment Skill
-
-Use `.agents/skills/assess-implementation/SKILL.md` to harshly grade each data structure implementation against repo rules and folder contracts.
-The skill is designed for manual use across AI agents and requires the assessment result to be shown as a markdown table in terminal and saved as a markdown report under `tmp/`.
-
-**Example Output**:
-
-![Sample assess-implementation skill output](.assets/sample-assess-implementation-skill-output.png)
