@@ -16,6 +16,7 @@ from .reporting import (
     report_status_from_file,
     validate_generated_report,
 )
+from .progress import LiveProgress
 from .scope_guard import create_phase_snapshot, enforce_phase_scope, write_change_table_markdown
 from .spawner import prompt_for_spawner_command, run_spawner_command
 from .verify import run_doc_comment_audit, run_make_with_timeout
@@ -196,6 +197,7 @@ def _generate_report(
     attempts_used: int,
     report_input_file: Path,
     report_path: Path,
+    progress: LiveProgress,
 ) -> tuple[bool, bool]:
     # returns (success, fatal)
     can_write, reason = can_write_path(report_path)
@@ -235,12 +237,14 @@ def _generate_report(
         )
 
         create_phase_snapshot(report_snapshot, cfg.repo_root)
+        progress.begin_phase(f"report ai attempt {report_attempt}/{cfg.report_attempts}", "ai")
         run_spawner_command(
             spawner_command,
             report_prompt.read_text(encoding="utf-8"),
             report_output_log,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            progress_callback=progress.update,
         )
 
         phase_ok = enforce_phase_scope(
@@ -262,7 +266,14 @@ def _generate_report(
     return False, False
 
 
-def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: str, summary_tsv: Path) -> FolderResult:
+def _process_folder(
+    cfg: Config,
+    folder: str,
+    run_root: Path,
+    spawner_command: str,
+    summary_tsv: Path,
+    progress: LiveProgress,
+) -> FolderResult:
     _require_folder_layout(cfg.repo_root, folder)
     folder_run_dir = run_root / folder
     ensure_dir_writable(folder_run_dir, f"folder run directory for {folder}")
@@ -327,12 +338,14 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
         )
 
         create_phase_snapshot(reset_snapshot, cfg.repo_root)
+        progress.begin_phase("reset ai run", "ai")
         if not run_spawner_command(
             spawner_command,
             reset_prompt.read_text(encoding="utf-8"),
             reset_output,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            progress_callback=progress.update,
         ):
             _append_failure_cause(
                 failure_causes_file,
@@ -386,12 +399,14 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
         )
 
         create_phase_snapshot(phase_snapshot, cfg.repo_root)
+        progress.begin_phase(f"impl ai attempt {attempt}/{cfg.max_attempts}", "ai")
         if run_spawner_command(
             spawner_command,
             prompt_file.read_text(encoding="utf-8"),
             output_log,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            progress_callback=progress.update,
         ):
             command_exit = 0
         else:
@@ -428,7 +443,15 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
                 )
 
         if phase_ok:
-            if run_doc_comment_audit(cfg.repo_root, cfg.script_root, folder, doc_log, cfg.doc_audit_timeout_seconds):
+            progress.begin_phase(f"doc audit attempt {attempt}/{cfg.max_attempts}", "log")
+            if run_doc_comment_audit(
+                cfg.repo_root,
+                cfg.script_root,
+                folder,
+                doc_log,
+                cfg.doc_audit_timeout_seconds,
+                progress_callback=progress.update,
+            ):
                 doc_status = "PASS"
             else:
                 phase_ok = False
@@ -441,7 +464,15 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
                 )
 
         if phase_ok:
-            if run_make_with_timeout(cfg.repo_root, cfg.test_timeout_seconds, test_log, "test-folder", folder):
+            progress.begin_phase(f"unit tests attempt {attempt}/{cfg.max_attempts}", "log")
+            if run_make_with_timeout(
+                cfg.repo_root,
+                cfg.test_timeout_seconds,
+                test_log,
+                "test-folder",
+                folder,
+                progress_callback=progress.update,
+            ):
                 test_status = "PASS"
             else:
                 phase_ok = False
@@ -454,7 +485,15 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
                 )
 
         if phase_ok:
-            if run_make_with_timeout(cfg.repo_root, cfg.bench_timeout_seconds, bench_log, "bench-folder", folder):
+            progress.begin_phase(f"bench checks attempt {attempt}/{cfg.max_attempts}", "log")
+            if run_make_with_timeout(
+                cfg.repo_root,
+                cfg.bench_timeout_seconds,
+                bench_log,
+                "bench-folder",
+                folder,
+                progress_callback=progress.update,
+            ):
                 bench_status = "PASS"
             else:
                 phase_ok = False
@@ -498,6 +537,7 @@ def _process_folder(cfg: Config, folder: str, run_root: Path, spawner_command: s
         attempts_used,
         report_input_file,
         report_path,
+        progress,
     )
     if report_fatal:
         return FolderResult("FAILURE", attempts_used, report_path, "report path not writable", fatal=True)
@@ -533,7 +573,12 @@ def run(cfg: Config, target: str) -> int:
     overall_status = 0
     for folder in targets:
         log(f"Processing {folder}")
-        result = _process_folder(cfg, folder, run_root, spawner_command, summary_tsv)
+        progress = LiveProgress()
+        try:
+            result = _process_folder(cfg, folder, run_root, spawner_command, summary_tsv, progress)
+        finally:
+            progress.clear()
+        log(f"Done {folder} ({result.status}, attempts={result.attempts_used})")
         if result.fatal:
             overall_status = 1
             break

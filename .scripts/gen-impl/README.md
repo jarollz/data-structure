@@ -38,7 +38,7 @@ Supported folders:
 The script prompts for the full AI spawner command at runtime:
 
 ```text
-type in the AI agent spawner command (must have "[prompt]" in it):
+AI agent spawner command (must have [prompt] in it):
 ```
 
 Rules:

@@ -3,6 +3,9 @@ from __future__ import annotations
 import re
 import shlex
 import subprocess
+import threading
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 from .io_safe import warn
@@ -74,24 +77,63 @@ def run_spawner_command(
     output_file: Path,
     timeout_seconds: int,
     repo_root: Path,
+    progress_callback: Callable[[float, str | None], None] | None = None,
 ) -> bool:
     rendered = render_spawner_command(command_template, prompt_text)
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        with output_file.open("w", encoding="utf-8") as fh:
-            completed = subprocess.run(
-                ["bash", "-lc", rendered],
-                cwd=repo_root,
-                stdout=fh,
-                stderr=subprocess.STDOUT,
-                timeout=timeout_seconds,
-                check=False,
-                text=True,
-            )
-        return completed.returncode == 0
-    except subprocess.TimeoutExpired:
-        with output_file.open("a", encoding="utf-8") as fh:
+    with output_file.open("w", encoding="utf-8") as fh:
+        proc = subprocess.Popen(
+            ["bash", "-lc", rendered],
+            cwd=repo_root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+
+        tail: dict[str, str | None] = {"value": None}
+
+        def _reader() -> None:
+            if proc.stdout is None:
+                return
+            try:
+                for chunk in proc.stdout:
+                    fh.write(chunk)
+                    fh.flush()
+                    for piece in chunk.replace("\r", "\n").split("\n"):
+                        if piece.strip():
+                            tail["value"] = piece.strip()
+            finally:
+                if proc.stdout is not None:
+                    proc.stdout.close()
+
+        reader = threading.Thread(target=_reader, daemon=True)
+        reader.start()
+
+        start = time.monotonic()
+        timed_out = False
+        while True:
+            elapsed = time.monotonic() - start
+            if progress_callback is not None:
+                progress_callback(elapsed, tail["value"])
+
+            code = proc.poll()
+            if code is not None:
+                reader.join()
+                return code == 0
+
+            if elapsed >= timeout_seconds:
+                timed_out = True
+                proc.kill()
+                proc.wait()
+                reader.join()
+                break
+
+            time.sleep(0.2)
+
+        if timed_out:
             fh.write("\n[gen-impl] spawner timeout\n")
+            fh.flush()
         return False
 
 
@@ -130,7 +172,8 @@ def prompt_for_spawner_command(run_root: Path, repo_root: Path, probe_timeout_se
     attempt = 1
     while True:
         try:
-            command_template = input('type in the AI agent spawner command (must have "[prompt]" in it): ').strip()
+            print("AI agent spawner command (must have [prompt] in it):")
+            command_template = input().strip()
         except EOFError as exc:
             raise RuntimeError("failed to read spawner command from stdin") from exc
 
