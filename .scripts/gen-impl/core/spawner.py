@@ -9,6 +9,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from .io_safe import warn
+from .process_control import terminate_timed_out_process
 
 
 ANSI_PATTERN = re.compile(r"\x1b\[[0-?]*[ -~]*[@-~]")
@@ -89,6 +90,7 @@ def run_spawner_command(
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            start_new_session=True,
         )
 
         tail: dict[str, str | None] = {"value": None}
@@ -111,7 +113,6 @@ def run_spawner_command(
         reader.start()
 
         start = time.monotonic()
-        timed_out = False
         while True:
             elapsed = time.monotonic() - start
             if progress_callback is not None:
@@ -123,18 +124,10 @@ def run_spawner_command(
                 return code == 0
 
             if elapsed >= timeout_seconds:
-                timed_out = True
-                proc.kill()
-                proc.wait()
-                reader.join()
-                break
+                terminate_timed_out_process(proc, reader, fh, "[gen-impl] spawner timeout")
+                return False
 
             time.sleep(0.2)
-
-        if timed_out:
-            fh.write("\n[gen-impl] spawner timeout\n")
-            fh.flush()
-        return False
 
 
 def _last_non_empty_line(path: Path) -> str:

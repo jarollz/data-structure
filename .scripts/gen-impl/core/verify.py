@@ -6,6 +6,8 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from .process_control import terminate_timed_out_process
+
 
 def _run_to_log(
     command: list[str],
@@ -23,6 +25,7 @@ def _run_to_log(
             stderr=subprocess.STDOUT,
             text=True,
             bufsize=1,
+            start_new_session=True,
         )
 
         tail: dict[str, str | None] = {"value": None}
@@ -45,7 +48,6 @@ def _run_to_log(
         reader.start()
 
         start = time.monotonic()
-        timed_out = False
         while True:
             elapsed = time.monotonic() - start
             if progress_callback is not None:
@@ -57,18 +59,10 @@ def _run_to_log(
                 return code == 0
 
             if elapsed >= timeout_seconds:
-                timed_out = True
-                proc.kill()
-                proc.wait()
-                reader.join()
-                break
+                terminate_timed_out_process(proc, reader, fh, "[gen-impl] command timeout")
+                return False
 
             time.sleep(0.2)
-
-        if timed_out:
-            fh.write("\n[gen-impl] command timeout\n")
-            fh.flush()
-        return False
 
 
 def run_doc_comment_audit(
