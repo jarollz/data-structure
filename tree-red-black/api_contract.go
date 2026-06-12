@@ -8,6 +8,55 @@ import "iter"
 // balancing.
 type TreeRedBlack[T any] struct{}
 
+// Color is red-black node color.
+type Color uint8
+
+const (
+	// ColorBlack is black red-black node color.
+	ColorBlack Color = iota
+	// ColorRed is red red-black node color.
+	ColorRed
+)
+
+// treeRedBlackNode is read-only node view backed by TreeRedBlack internal state.
+type treeRedBlackNode[T any] struct {
+	state *treeState[T]
+	index int
+}
+
+// Compile-time check: *treeRedBlackNode[T] satisfies NodeAPI[T].
+var _ NodeAPI[int] = (*treeRedBlackNode[int])(nil)
+
+// NodeAPI defines read-only structural access for one tree node.
+type NodeAPI[T any] interface {
+	// Value returns node value.
+	//
+	// Value returns value stored at this node and never mutates tree state.
+	//
+	// Example: v := node.Value()
+	Value() T
+	// Color returns node color.
+	//
+	// Color returns ColorBlack or ColorRed for this node.
+	//
+	// Example: c := node.Color()
+	Color() Color
+	// ChildCount returns number of direct child nodes.
+	//
+	// Red-black nodes have 0, 1, or 2 children.
+	//
+	// Example: n := node.ChildCount()
+	ChildCount() int
+	// Children yields direct child nodes in deterministic order.
+	//
+	// Red-black child order is left child first, then right child.
+	// Sequence supports early stop when yield returns false.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: for child := range node.Children() { _ = child }
+	Children() iter.Seq[NodeAPI[T]]
+}
+
 // API defines set-like red-black tree behavior.
 type API[T any] interface {
 	// Insert adds v when missing and returns true.
@@ -72,6 +121,14 @@ type API[T any] interface {
 	//
 	// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *TreeRedBlack[T]
+	// RootNode returns read-only view of root node.
+	//
+	// RootNode returns (zero, false) when tree is empty.
+	// Returned node view is read-only and becomes invalid after tree mutation.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: root, ok := tree.RootNode()
+	RootNode() (NodeAPI[T], bool)
 	// InOrder yields values in ascending sorted order.
 	//
 	// Sequence yields each live value once, supports early stop when yield returns false, and yields nothing when empty.

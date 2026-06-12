@@ -218,3 +218,112 @@ func TestTreeGeneralCloneSpec(t *testing.T) {
 		}
 	})
 }
+
+func TestTreeGeneralWalkPowerSpec(t *testing.T) {
+	t.Run("rootnode_non_empty_and_empty_after_root_removal", func(t *testing.T) {
+		tree := New[string]("root")
+		root, ok := tree.RootNode()
+		if !ok || root == nil {
+			t.Fatalf("RootNode() = (%v, %v), want (node, true)", root, ok)
+		}
+		if root.Value() != "root" {
+			t.Fatalf("root.Value() = %q, want %q", root.Value(), "root")
+		}
+
+		if !tree.RemoveSubtree(0) {
+			t.Fatalf("RemoveSubtree(0) = false, want true")
+		}
+		if root, ok := tree.RootNode(); ok || root != nil {
+			t.Fatalf("empty RootNode() = (%v, %v), want (nil, false)", root, ok)
+		}
+	})
+
+	t.Run("children_order_childcount_and_early_stop", func(t *testing.T) {
+		tree := New[string]("root")
+		tree.AddChild(0, "a")
+		tree.AddChild(0, "b")
+		tree.AddChild(0, "c")
+
+		root, ok := tree.RootNode()
+		if !ok {
+			t.Fatalf("RootNode() ok = false, want true")
+		}
+
+		children := collectSeq(root.Children())
+		if len(children) != root.ChildCount() {
+			t.Fatalf("ChildCount()=%d, yielded=%d", root.ChildCount(), len(children))
+		}
+		if len(children) != 3 {
+			t.Fatalf("children len=%d, want 3", len(children))
+		}
+		if children[0].Value() != "a" || children[1].Value() != "b" || children[2].Value() != "c" {
+			t.Fatalf("children order=%q,%q,%q, want a,b,c", children[0].Value(), children[1].Value(), children[2].Value())
+		}
+
+		count := 0
+		for range root.Children() {
+			count++
+			break
+		}
+		if count != 1 {
+			t.Fatalf("early-stop child count=%d, want 1", count)
+		}
+	})
+
+	t.Run("dfs_visits_exactly_len_and_excludes_removed_subtree", func(t *testing.T) {
+		tree := New[int](0)
+		a, _ := tree.AddChild(0, 1)
+		b, _ := tree.AddChild(0, 2)
+		_, _ = tree.AddChild(0, 3)
+		a1, _ := tree.AddChild(a, 4)
+		_, _ = tree.AddChild(a, 5)
+		_, _ = tree.AddChild(a1, 6)
+		_, _ = tree.AddChild(b, 7)
+
+		if !tree.RemoveSubtree(a) {
+			t.Fatalf("RemoveSubtree(a) = false, want true")
+		}
+
+		root, ok := tree.RootNode()
+		if !ok {
+			t.Fatalf("RootNode() ok = false, want true")
+		}
+
+		seen := make(map[int]struct{})
+		var walk func(NodeAPI[int])
+		walk = func(node NodeAPI[int]) {
+			if node == nil {
+				return
+			}
+			v := node.Value()
+			if _, exists := seen[v]; exists {
+				t.Fatalf("duplicate node visit for value %d", v)
+			}
+			seen[v] = struct{}{}
+
+			childCount := 0
+			for child := range node.Children() {
+				childCount++
+				walk(child)
+			}
+			if childCount != node.ChildCount() {
+				t.Fatalf("node=%d ChildCount()=%d yielded=%d", v, node.ChildCount(), childCount)
+			}
+		}
+
+		walk(root)
+		if len(seen) != tree.Len() {
+			t.Fatalf("dfs seen=%d, Len()=%d", len(seen), tree.Len())
+		}
+		if _, exists := seen[1]; exists {
+			t.Fatalf("removed subtree value 1 should not be visited")
+		}
+		if _, exists := seen[4]; exists {
+			t.Fatalf("removed subtree value 4 should not be visited")
+		}
+		if _, exists := seen[6]; exists {
+			t.Fatalf("removed subtree value 6 should not be visited")
+		}
+		t.Log("mutation during node traversal is not safe by contract")
+	})
+}

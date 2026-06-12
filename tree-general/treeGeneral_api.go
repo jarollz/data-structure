@@ -231,6 +231,20 @@ func (s *TreeGeneral[T]) CloneWith(cloneValue func(T) T) *TreeGeneral[T] {
 	return &handle.api
 }
 
+// RootNode implements the API interface.
+// RootNode returns read-only view of root node.
+// RootNode returns (zero, false) for empty tree.
+// Mutation during node traversal is not safe.
+// Example: root, ok := tree.RootNode()
+func (s *TreeGeneral[T]) RootNode() (NodeAPI[T], bool) {
+	state := stateOf(s)
+	if state == nil || !state.isLive(0) {
+		var zero NodeAPI[T]
+		return zero, false
+	}
+	return &treeGeneralNode[T]{state: state, index: 0}, true
+}
+
 // PreOrder implements the API interface.
 //
 // PreOrder yields live values in parent-before-children order.
@@ -246,5 +260,53 @@ func (s *TreeGeneral[T]) PreOrder() iter.Seq[T] {
 			o := state.nodeOffset(id)
 			return yield(b.value[o])
 		})
+	}
+}
+
+// Value returns node value.
+func (n *treeGeneralNode[T]) Value() T {
+	if n == nil || n.state == nil || !n.state.isLive(n.index) {
+		var zero T
+		return zero
+	}
+	b := n.state.blockFor(n.index)
+	o := n.state.nodeOffset(n.index)
+	return b.value[o]
+}
+
+// ChildCount returns number of direct child nodes.
+func (n *treeGeneralNode[T]) ChildCount() int {
+	if n == nil || n.state == nil || !n.state.isLive(n.index) {
+		return 0
+	}
+	b := n.state.blockFor(n.index)
+	o := n.state.nodeOffset(n.index)
+	count := 0
+	for child := b.firstChild[o]; child != nilNodeID; {
+		count++
+		cb := n.state.blockFor(child)
+		co := n.state.nodeOffset(child)
+		child = cb.nextSibling[co]
+	}
+	return count
+}
+
+// Children yields direct child nodes in stored sibling order.
+func (n *treeGeneralNode[T]) Children() iter.Seq[NodeAPI[T]] {
+	return func(yield func(NodeAPI[T]) bool) {
+		if n == nil || n.state == nil || !n.state.isLive(n.index) {
+			return
+		}
+		b := n.state.blockFor(n.index)
+		o := n.state.nodeOffset(n.index)
+		for child := b.firstChild[o]; child != nilNodeID; {
+			cb := n.state.blockFor(child)
+			co := n.state.nodeOffset(child)
+			next := cb.nextSibling[co]
+			if !yield(&treeGeneralNode[T]{state: n.state, index: child}) {
+				return
+			}
+			child = next
+		}
 	}
 }

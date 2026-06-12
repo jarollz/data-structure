@@ -144,6 +144,35 @@ Behavior expectations
 Performance expectations
 - [ ] `O(n)` container work plus hook cost.
 
+### `RootNode() (NodeAPI[T], bool)`
+Purpose
+- [ ] Read root node through structural node-view API.
+
+Behavior expectations
+- [ ] Empty tree returns `(zero, false)` where zero is nil `NodeAPI[T]`.
+- [ ] Non-empty tree returns `(rootNode, true)`.
+- [ ] Returned node view is read-only.
+- [ ] Node view becomes invalid after any tree mutation (`Insert`, `Delete`, `Clear`).
+
+Performance expectations
+- [ ] `O(1)` time.
+
+### `NodeAPI[T]`
+Purpose
+- [ ] Provide read-only structural traversal power without exposing internal storage.
+
+Behavior expectations
+- [ ] `Value() T` returns node value.
+- [ ] `ChildCount() int` returns direct child count in range `[0, 2]`.
+- [ ] `Children() iter.Seq[NodeAPI[T]]` yields direct children in deterministic left-then-right order.
+- [ ] `Children()` supports early stop when consumer returns `false`.
+- [ ] Mutation during node traversal is not safe.
+
+Performance expectations
+- [ ] `Value()` is `O(1)`.
+- [ ] `ChildCount()` is `O(1)`.
+- [ ] Full `Children()` walk is `O(number of direct children)`.
+
 ### `InOrder() iter.Seq[T]`
 Purpose
 - [ ] Iterate live values in ascending sorted order.
@@ -186,12 +215,14 @@ Performance expectations
 - [ ] Early stop works when `yield` returns `false`.
 - [ ] Empty tree yields nothing and does not panic.
 - [ ] Mutation during iteration is not safe.
+- [ ] Mutation during `NodeAPI` traversal is not safe.
 
 ## Edge cases
 - [ ] Insert/delete on empty tree.
 - [ ] Duplicate insert returns `false` and leaves tree unchanged.
 - [ ] Delete root with 0, 1, 2 children.
 - [ ] All four rotation patterns are covered.
+- [ ] `RootNode()` on empty tree returns `(zero, false)`.
 - [ ] `Clone()` on empty tree returns empty independent tree with same comparator.
 - [ ] `CloneWith(nil)` is equivalent to `Clone()`.
 - [ ] `CloneWith(...)` calls `cloneValue` only for live values in ascending order.
@@ -201,6 +232,8 @@ Performance expectations
 - [ ] Sorted order tests.
 - [ ] Rotation scenario tests.
 - [ ] Random operations against reference set model.
+- [ ] `RootNode/NodeAPI` tests for empty/non-empty root access, left-right child order, child-count consistency, and early stop in `Children()`.
+- [ ] `RootNode/NodeAPI` DFS walk visits exactly `Len()` live nodes.
 - [ ] `Clone/CloneWith` tests for independence, nil-hook equivalence, shallow-copy default, custom hook behavior, live-value-only hook calls, and preserved sorted/min/max behavior.
 
 ## Benchmark checklist
@@ -249,6 +282,7 @@ Performance expectations
 - Use randomized set operations with fixed seed and sorted oracle.
 - Validate `Clone/CloneWith` preserve sorted order, min/max, and hook-call count.
 - Validate BST ordering, height metadata, and balance factor bounds.
+- Validate `RootNode/NodeAPI` child ordering, child-count consistency, and full-node coverage.
 - Iterator tests must verify sorted in-order output and early stop.
 
 ## AI Prompt Snippets

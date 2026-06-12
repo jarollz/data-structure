@@ -7,6 +7,39 @@ import "iter"
 // TreeAvl stores unique comparator-ordered values with AVL balancing.
 type TreeAvl[T any] struct{}
 
+// treeAvlNode is read-only node view backed by TreeAvl internal state.
+type treeAvlNode[T any] struct {
+	state *treeState[T]
+	index int
+}
+
+// Compile-time check: *treeAvlNode[T] satisfies NodeAPI[T].
+var _ NodeAPI[int] = (*treeAvlNode[int])(nil)
+
+// NodeAPI defines read-only structural access for one tree node.
+type NodeAPI[T any] interface {
+	// Value returns node value.
+	//
+	// Value returns value stored at this node and never mutates tree state.
+	//
+	// Example: v := node.Value()
+	Value() T
+	// ChildCount returns number of direct child nodes.
+	//
+	// AVL nodes have 0, 1, or 2 children.
+	//
+	// Example: n := node.ChildCount()
+	ChildCount() int
+	// Children yields direct child nodes in deterministic order.
+	//
+	// AVL child order is left child first, then right child.
+	// Sequence supports early stop when yield returns false.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: for child := range node.Children() { _ = child }
+	Children() iter.Seq[NodeAPI[T]]
+}
+
 // API defines set-like AVL tree behavior.
 type API[T any] interface {
 	// Insert adds v when missing and returns true.
@@ -71,6 +104,14 @@ type API[T any] interface {
 	//
 	// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *TreeAvl[T]
+	// RootNode returns read-only view of root node.
+	//
+	// RootNode returns (zero, false) when tree is empty.
+	// Returned node view is read-only and becomes invalid after tree mutation.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: root, ok := tree.RootNode()
+	RootNode() (NodeAPI[T], bool)
 	// InOrder yields values in ascending sorted order.
 	//
 	// Sequence yields each live value once, supports early stop when yield returns false, and yields nothing when empty.

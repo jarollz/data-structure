@@ -135,6 +135,35 @@ Performance expectations
 - [ ] Let `idRange` be next allocated ID, covering live IDs plus removed-ID holes in `[0, idRange)`.
 - [ ] `O(idRange)` container work plus hook cost.
 
+### `RootNode() (NodeAPI[T], bool)`
+Purpose
+- [ ] Read root node through structural node-view API.
+
+Behavior expectations
+- [ ] Empty tree returns `(zero, false)` where zero is nil `NodeAPI[T]`.
+- [ ] Non-empty tree returns `(rootNode, true)`.
+- [ ] Returned node view is read-only.
+- [ ] Node view becomes invalid after any tree mutation (`AddChild`, `RemoveSubtree`).
+
+Performance expectations
+- [ ] `O(1)` time.
+
+### `NodeAPI[T]`
+Purpose
+- [ ] Provide read-only structural traversal power without exposing internal storage.
+
+Behavior expectations
+- [ ] `Value() T` returns node value.
+- [ ] `ChildCount() int` returns direct live child count.
+- [ ] `Children() iter.Seq[NodeAPI[T]]` yields direct children in stored sibling order.
+- [ ] `Children()` supports early stop when consumer returns `false`.
+- [ ] Mutation during node traversal is not safe.
+
+Performance expectations
+- [ ] `Value()` is `O(1)`.
+- [ ] `ChildCount()` is `O(number of direct children)` unless implementation tracks count.
+- [ ] Full `Children()` walk is `O(number of direct children)`.
+
 ### `PreOrder() iter.Seq[T]`
 Purpose
 - [ ] Iterate live node values in parent-before-children order.
@@ -177,11 +206,13 @@ Performance expectations
 - [ ] Early stop works when `yield` returns `false`.
 - [ ] Empty tree yields nothing and does not panic. This includes tree after removing root.
 - [ ] Mutation during iteration is not safe.
+- [ ] Mutation during `NodeAPI` traversal is not safe.
 
 ## Edge cases
 - [ ] `RemoveSubtree(0)` removes entire tree and leaves it empty.
 - [ ] Invalid node IDs are handled safely.
 - [ ] Add/remove around leaves works correctly.
+- [ ] `RootNode()` on empty tree returns `(zero, false)`.
 - [ ] `Clone()` of empty tree remains empty and keeps future root-child ID progression identical to original empty tree state.
 - [ ] `CloneWith(nil)` is equivalent to `Clone()`.
 - [ ] `CloneWith(...)` calls `cloneValue` only for live nodes, never for removed-ID holes.
@@ -190,6 +221,8 @@ Performance expectations
 - [ ] Parent-child consistency tests.
 - [ ] No-cycle verification.
 - [ ] Traversal order tests.
+- [ ] `RootNode/NodeAPI` tests for empty/non-empty root access, sibling-order children, child-count consistency, and early stop in `Children()`.
+- [ ] `RootNode/NodeAPI` DFS walk visits exactly `Len()` live nodes.
 - [ ] `Clone/CloneWith` tests for independence, nil-hook equivalence, shallow-copy default, custom hook behavior, live-node-only hook calls, preserved IDs/holes, and preserved next-ID progression.
 
 ## Benchmark checklist
@@ -238,6 +271,7 @@ Performance expectations
 - Cover root removal policy and invalid ID handling.
 - Validate `Clone/CloneWith` preserve IDs, holes, pre-order traversal, and next inserted ID.
 - Compare traversal output against expected hierarchy snapshots.
+- Validate `RootNode/NodeAPI` sibling order, child-count consistency, and full-node coverage.
 - Iterator tests must verify preorder semantics and early stop.
 
 ## AI Prompt Snippets

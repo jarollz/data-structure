@@ -8,6 +8,39 @@ import "iter"
 // preserved holes after subtree removal.
 type TreeGeneral[T any] struct{}
 
+// treeGeneralNode is read-only node view backed by TreeGeneral internal state.
+type treeGeneralNode[T any] struct {
+	state *treeState[T]
+	index int
+}
+
+// Compile-time check: *treeGeneralNode[T] satisfies NodeAPI[T].
+var _ NodeAPI[int] = (*treeGeneralNode[int])(nil)
+
+// NodeAPI defines read-only structural access for one tree node.
+type NodeAPI[T any] interface {
+	// Value returns node value.
+	//
+	// Value returns value stored at this node and never mutates tree state.
+	//
+	// Example: v := node.Value()
+	Value() T
+	// ChildCount returns number of direct child nodes.
+	//
+	// ChildCount returns count of direct live children in stored sibling order.
+	//
+	// Example: n := node.ChildCount()
+	ChildCount() int
+	// Children yields direct child nodes in deterministic order.
+	//
+	// Child order matches stored sibling order.
+	// Sequence supports early stop when yield returns false.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: for child := range node.Children() { _ = child }
+	Children() iter.Seq[NodeAPI[T]]
+}
+
 // API defines general tree behavior.
 type API[T any] interface {
 	// AddChild adds new last child of parentID.
@@ -68,6 +101,14 @@ type API[T any] interface {
 	//
 	// Example: cloned := tree.CloneWith(func(v int) int { return v * 10 })
 	CloneWith(cloneValue func(T) T) *TreeGeneral[T]
+	// RootNode returns read-only view of root node.
+	//
+	// RootNode returns (zero, false) when tree is empty.
+	// Returned node view is read-only and becomes invalid after tree mutation.
+	// Mutation during node traversal is not safe.
+	//
+	// Example: root, ok := tree.RootNode()
+	RootNode() (NodeAPI[T], bool)
 	// PreOrder yields values parent-before-children.
 	//
 	// Sibling order is preserved. Sequence yields each live node once, supports

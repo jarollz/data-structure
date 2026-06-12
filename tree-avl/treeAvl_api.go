@@ -160,6 +160,20 @@ func (s *TreeAvl[T]) CloneWith(cloneValue func(T) T) *TreeAvl[T] {
 	return cloned
 }
 
+// RootNode implements the API interface.
+// RootNode returns read-only view of root node.
+// RootNode returns (zero, false) for empty tree.
+// Mutation during node traversal is not safe.
+// Example: root, ok := tree.RootNode()
+func (s *TreeAvl[T]) RootNode() (NodeAPI[T], bool) {
+	st := ensureState(s, nil)
+	if st == nil || st.root == nilIndex {
+		var zero NodeAPI[T]
+		return zero, false
+	}
+	return &treeAvlNode[T]{state: st, index: st.root}, true
+}
+
 // InOrder implements the API interface.
 // InOrder yields values in ascending sorted order.
 // InOrder yields each live value once and supports early stop.
@@ -172,5 +186,48 @@ func (s *TreeAvl[T]) InOrder() iter.Seq[T] {
 			return
 		}
 		st.walkInOrder(st.root, yield)
+	}
+}
+
+// Value returns node value.
+func (n *treeAvlNode[T]) Value() T {
+	if n == nil || n.state == nil || n.index == nilIndex {
+		var zero T
+		return zero
+	}
+	return n.state.value(n.index)
+}
+
+// ChildCount returns number of direct child nodes.
+func (n *treeAvlNode[T]) ChildCount() int {
+	if n == nil || n.state == nil || n.index == nilIndex {
+		return 0
+	}
+	count := 0
+	if n.state.left(n.index) != nilIndex {
+		count++
+	}
+	if n.state.right(n.index) != nilIndex {
+		count++
+	}
+	return count
+}
+
+// Children yields direct child nodes in left-to-right order.
+func (n *treeAvlNode[T]) Children() iter.Seq[NodeAPI[T]] {
+	return func(yield func(NodeAPI[T]) bool) {
+		if n == nil || n.state == nil || n.index == nilIndex {
+			return
+		}
+		left := n.state.left(n.index)
+		if left != nilIndex {
+			if !yield(&treeAvlNode[T]{state: n.state, index: left}) {
+				return
+			}
+		}
+		right := n.state.right(n.index)
+		if right != nilIndex {
+			_ = yield(&treeAvlNode[T]{state: n.state, index: right})
+		}
 	}
 }
