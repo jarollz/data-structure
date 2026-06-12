@@ -1,5 +1,7 @@
 # gen-impl
 
+Canonical contract: `.scripts/gen-impl/SPECS.md`
+
 `gen.sh` is helper script for spawning an AI agent to generate or regenerate implementation code for this repository's data structure folders.
 
 ## Usage
@@ -10,28 +12,35 @@ Run one folder:
 ./.scripts/gen-impl/gen.sh list-array
 ```
 
-Run all supported folders sequentially:
+Run all discovered folders sequentially:
 
 ```bash
 ./.scripts/gen-impl/gen.sh all
 ```
 
-Supported folders:
+Supported folders come from root `go.work`.
 
-- `list-array`
-- `list-linked-singly`
-- `list-linked-doubly`
-- `list-skip`
-- `queue`
-- `stack`
-- `heap`
-- `tree-general`
-- `tree-avl`
-- `tree-red-black`
-- `map-hash`
-- `map-trie`
-- `map-tree-avl`
-- `map-tree-red-black`
+Required target-folder files:
+
+- `go.mod`
+- `README.md`
+- `SPECS.md`
+- `api_contract.go`
+
+Required module path in `go.mod`:
+
+```text
+module github.com/jarollz/data-structure/<folder>
+```
+
+Recommended established-folder conventions:
+
+- `helpers_test.go`
+- `bench_policy_test.go`
+- exactly one `*_api.go`
+- exactly one non-test implementation `.go`
+- exactly one `*_test.go`
+- exactly one `*_bench_test.go`
 
 ## AI Spawner Command
 
@@ -80,7 +89,7 @@ For one folder, the script:
 
 ## all Mode
 
-`all` mode runs the same flow for every supported folder in fixed order.
+`all` mode runs the same flow for every folder listed in root `go.work`, in root `go.work` order.
 
 - Folders run sequentially.
 - Default behavior is continue on failure.
@@ -210,3 +219,5 @@ If an attempt fails repeatedly:
 - read the latest attempt summary under `tmp/gen-impl/runs/.../<folder>/attempt_<n>/summary.md`
 - read the corresponding test or benchmark logs
 - review the previous report under `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` before rerunning
+
+For exact behavior, exact output text, and full reconstruction contract, read `.scripts/gen-impl/SPECS.md`.

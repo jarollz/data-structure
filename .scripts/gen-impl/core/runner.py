@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import sys
 
-from .config import Config, SUPPORTED_FOLDERS
+from .config import Config
 from .io_safe import can_write_path, ensure_dir_writable, log, warn, write_text, timestamp_utc
 from .reporting import (
     benchmark_failure_causes,
     extract_failure_suggestions,
     failure_improvement_suggestions_from_causes,
     folder_has_non_test_impl_files,
+    list_non_test_impl_files,
     report_performance_status_from_file,
     folder_report_path,
     parse_benchmark_rows_from_log,
@@ -48,11 +50,11 @@ class FolderRunPolicy:
     clean_first: bool
 
 
-def _resolve_targets(target: str) -> list[str]:
+def _resolve_targets(cfg: Config, target: str) -> list[str]:
     if target == "all":
-        return list(SUPPORTED_FOLDERS)
-    if target not in SUPPORTED_FOLDERS:
-        raise RuntimeError(f"unsupported folder '{target}'")
+        return list(cfg.supported_folders)
+    if target not in cfg.supported_folders:
+        raise RuntimeError(f"target '{target}' is not listed in root go.work")
     return [target]
 
 
@@ -78,12 +80,61 @@ def _policy_for_folder(
     return FolderRunPolicy(skip=False, note="report requires rerun with clean-first reset", clean_first=True)
 
 
+MODULE_PATTERN = re.compile(r"^module\s+(\S+)\s*$")
+EXPECTED_MODULE_PREFIX = "github.com/jarollz/data-structure/"
+
+
+def _glob_count(folder_dir: Path, pattern: str) -> int:
+    return len(list(folder_dir.glob(pattern)))
+
+
 def _require_folder_layout(repo_root: Path, folder: str) -> None:
     folder_dir = repo_root / folder
     if not folder_dir.is_dir():
         raise RuntimeError(f"folder does not exist: {folder}")
-    if not (folder_dir / "go.mod").is_file():
-        raise RuntimeError(f"missing go.mod in folder: {folder}")
+
+    for required_file in ("go.mod", "SPECS.md", "api_contract.go", "README.md"):
+        required_path = folder_dir / required_file
+        if not required_path.is_file():
+            raise RuntimeError(f"missing required file {folder}/{required_file}")
+
+    expected_module = EXPECTED_MODULE_PREFIX + folder
+    module_line = None
+    for line in (folder_dir / "go.mod").read_text(encoding="utf-8", errors="replace").splitlines():
+        match = MODULE_PATTERN.match(line.strip())
+        if match:
+            module_line = match.group(1)
+            break
+
+    if module_line is None:
+        raise RuntimeError(f"missing module declaration in {folder}/go.mod")
+    if module_line != expected_module:
+        raise RuntimeError(
+            f"invalid module path in {folder}/go.mod: expected 'module {expected_module}'"
+        )
+
+
+def _warn_on_common_folder_conventions(repo_root: Path, folder: str) -> None:
+    folder_dir = repo_root / folder
+    for required_name in ("helpers_test.go", "bench_policy_test.go"):
+        if not (folder_dir / required_name).is_file():
+            warn(f"folder {folder} missing recommended file {required_name}")
+
+    api_count = _glob_count(folder_dir, "*_api.go")
+    if api_count != 1:
+        warn(f"folder {folder} expected exactly one *_api.go file, found {api_count}")
+
+    impl_count = len(list_non_test_impl_files(repo_root, folder))
+    if impl_count != 1:
+        warn(f"folder {folder} expected exactly one non-test implementation .go file, found {impl_count}")
+
+    test_count = _glob_count(folder_dir, "*_test.go") - _glob_count(folder_dir, "*_bench_test.go")
+    if test_count != 1:
+        warn(f"folder {folder} expected exactly one *_test.go file, found {test_count}")
+
+    bench_count = _glob_count(folder_dir, "*_bench_test.go")
+    if bench_count != 1:
+        warn(f"folder {folder} expected exactly one *_bench_test.go file, found {bench_count}")
 
 
 def _count_lines(path: Path) -> int:
@@ -360,6 +411,7 @@ def _process_folder(
     progress: LiveProgress,
 ) -> FolderResult:
     _require_folder_layout(cfg.repo_root, folder)
+    _warn_on_common_folder_conventions(cfg.repo_root, folder)
     folder_run_dir = run_root / folder
     ensure_dir_writable(folder_run_dir, f"folder run directory for {folder}")
 
@@ -727,7 +779,7 @@ def run(cfg: Config, target: str) -> int:
     ensure_dir_writable(run_root, "run root")
     ensure_dir_writable(reports_root, "reports root")
 
-    targets = _resolve_targets(target)
+    targets = _resolve_targets(cfg, target)
     spawner_command = prompt_for_spawner_command(
         run_root,
         cfg.repo_root,

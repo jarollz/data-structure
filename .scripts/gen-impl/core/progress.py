@@ -51,7 +51,7 @@ class LiveProgress:
         return frame
 
     def _render_lines(self, elapsed_seconds: float, tail: str | None) -> tuple[str, str]:
-        columns = max(shutil.get_terminal_size(fallback=(120, 24)).columns, 20)
+        columns = max(shutil.get_terminal_size(fallback=(120, 24)).columns, 50)
         phase_line = f"{self._phase} | {self._spinner()} | {elapsed_seconds:.2f}s"
 
         if tail is None or not tail.strip():
