@@ -78,6 +78,7 @@ def run_spawner_command(
     output_file: Path,
     timeout_seconds: int,
     repo_root: Path,
+    idle_timeout_seconds: int | None = None,
     progress_callback: Callable[[float, str | None], None] | None = None,
 ) -> bool:
     rendered = render_spawner_command(command_template, prompt_text)
@@ -94,6 +95,7 @@ def run_spawner_command(
         )
 
         tail: dict[str, str | None] = {"value": None}
+        activity_at: dict[str, float] = {"value": time.monotonic()}
 
         def _reader() -> None:
             if proc.stdout is None:
@@ -102,6 +104,7 @@ def run_spawner_command(
                 for chunk in proc.stdout:
                     fh.write(chunk)
                     fh.flush()
+                    activity_at["value"] = time.monotonic()
                     for piece in chunk.replace("\r", "\n").split("\n"):
                         if piece.strip():
                             tail["value"] = piece.strip()
@@ -127,6 +130,17 @@ def run_spawner_command(
                 terminate_timed_out_process(proc, reader, fh, "[gen-impl] spawner timeout")
                 return False
 
+            if idle_timeout_seconds is not None and idle_timeout_seconds > 0:
+                idle_elapsed = time.monotonic() - activity_at["value"]
+                if idle_elapsed >= idle_timeout_seconds:
+                    terminate_timed_out_process(
+                        proc,
+                        reader,
+                        fh,
+                        f"[gen-impl] spawner idle timeout ({idle_timeout_seconds}s without output)",
+                    )
+                    return False
+
             time.sleep(0.2)
 
 
@@ -149,13 +163,21 @@ def probe_spawner_command(
     probe_dir: Path,
     timeout_seconds: int,
     repo_root: Path,
+    idle_timeout_seconds: int | None = None,
 ) -> bool:
     raw_output = probe_dir / "probe_raw.log"
     clean_output = probe_dir / "probe_clean.log"
     prompt = "Reply with exactly this single word and nothing else: Hello"
     probe_dir.mkdir(parents=True, exist_ok=True)
 
-    if not run_spawner_command(command_template, prompt, raw_output, timeout_seconds, repo_root):
+    if not run_spawner_command(
+        command_template,
+        prompt,
+        raw_output,
+        timeout_seconds,
+        repo_root,
+        idle_timeout_seconds=idle_timeout_seconds,
+    ):
         return False
     strip_ansi_to_file(raw_output, clean_output)
     return _last_non_empty_line(clean_output) == "Hello"
@@ -165,6 +187,7 @@ def prompt_for_spawner_command(
     run_root: Path,
     repo_root: Path,
     probe_timeout_seconds: int,
+    spawner_idle_timeout_seconds: int,
     preset_command: str = "",
 ) -> str:
     if preset_command:
@@ -173,7 +196,13 @@ def prompt_for_spawner_command(
             raise RuntimeError(f"AI_SPAWNER_COMMAND invalid: {reason}")
 
         probe_dir = run_root / "spawner_probe_env"
-        if probe_spawner_command(preset_command, probe_dir, probe_timeout_seconds, repo_root):
+        if probe_spawner_command(
+            preset_command,
+            probe_dir,
+            probe_timeout_seconds,
+            repo_root,
+            idle_timeout_seconds=spawner_idle_timeout_seconds,
+        ):
             return preset_command
         raise RuntimeError(
             "AI_SPAWNER_COMMAND probe command failed or final output was not Hello. "
@@ -195,7 +224,13 @@ def prompt_for_spawner_command(
             continue
 
         probe_dir = run_root / f"spawner_probe_{attempt}"
-        if probe_spawner_command(command_template, probe_dir, probe_timeout_seconds, repo_root):
+        if probe_spawner_command(
+            command_template,
+            probe_dir,
+            probe_timeout_seconds,
+            repo_root,
+            idle_timeout_seconds=spawner_idle_timeout_seconds,
+        ):
             return command_template
 
         warn(f"probe command failed or final output was not Hello. Review {probe_dir / 'probe_clean.log'} and try again.")

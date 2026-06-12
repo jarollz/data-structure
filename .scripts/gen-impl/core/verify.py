@@ -98,3 +98,19 @@ def run_make_with_timeout(
         output_log=output_log,
         progress_callback=progress_callback,
     )
+
+
+def run_go_test_json_with_timeout(
+    repo_root: Path,
+    folder: str,
+    timeout_seconds: int,
+    output_log: Path,
+    progress_callback: Callable[[float, str | None], None] | None = None,
+) -> bool:
+    return _run_to_log(
+        ["go", "test", "-json", f"./{folder}/..."],
+        cwd=repo_root,
+        timeout_seconds=timeout_seconds,
+        output_log=output_log,
+        progress_callback=progress_callback,
+    )

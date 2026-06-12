@@ -7,19 +7,29 @@ import sys
 from .config import Config, SUPPORTED_FOLDERS
 from .io_safe import can_write_path, ensure_dir_writable, log, warn, write_text, timestamp_utc
 from .reporting import (
+    benchmark_failure_causes,
     extract_failure_suggestions,
+    failure_improvement_suggestions_from_causes,
     folder_has_non_test_impl_files,
+    report_performance_status_from_file,
     folder_report_path,
+    parse_benchmark_rows_from_log,
+    parse_unit_test_scenarios_from_json_log,
     render_report_content,
+    render_benchmark_table,
+    render_failure_causes_table,
+    render_failure_improvement_table,
+    render_scenario_table,
     report_attempts_from_file,
     report_is_fresh,
     report_status_from_file,
+    runtime_failure_cause_from_log,
     validate_generated_report,
 )
 from .progress import LiveProgress
 from .scope_guard import create_phase_snapshot, enforce_phase_scope, write_change_table_markdown
 from .spawner import prompt_for_spawner_command, run_spawner_command
-from .verify import run_doc_comment_audit, run_make_with_timeout
+from .verify import run_doc_comment_audit, run_go_test_json_with_timeout, run_make_with_timeout
 
 
 @dataclass
@@ -31,12 +41,41 @@ class FolderResult:
     fatal: bool = False
 
 
+@dataclass(frozen=True)
+class FolderRunPolicy:
+    skip: bool
+    note: str
+    clean_first: bool
+
+
 def _resolve_targets(target: str) -> list[str]:
     if target == "all":
         return list(SUPPORTED_FOLDERS)
     if target not in SUPPORTED_FOLDERS:
         raise RuntimeError(f"unsupported folder '{target}'")
     return [target]
+
+
+def _policy_for_folder(
+    force_mode: int,
+    report_status: str,
+    performance_status: str,
+    report_fresh: bool,
+) -> FolderRunPolicy:
+    if force_mode == 1:
+        return FolderRunPolicy(skip=False, note="FORCE=1 always reruns with clean-first reset", clean_first=True)
+
+    if force_mode == 2 and performance_status == "FAIL":
+        return FolderRunPolicy(
+            skip=False,
+            note="FORCE=2 reruns because prior performance status is FAIL (improve in place)",
+            clean_first=False,
+        )
+
+    if report_status == "SUCCESS" and report_fresh:
+        return FolderRunPolicy(skip=True, note="fresh SUCCESS report already exists", clean_first=False)
+
+    return FolderRunPolicy(skip=False, note="report requires rerun with clean-first reset", clean_first=True)
 
 
 def _require_folder_layout(repo_root: Path, folder: str) -> None:
@@ -60,13 +99,46 @@ def _render_template(template_file: Path, output_file: Path, replacements: dict[
     write_text(output_file, text)
 
 
-def _append_failure_cause(path: Path, cause: str, evidence: str, suggestion: str) -> None:
+def _append_failure_cause(path: Path, cause: str, scenario: str, evidence: str, suggestion: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     cause = cause.replace("\n", " ")
+    scenario = scenario.replace("\n", " ")
     evidence = evidence.replace("\n", " ")
     suggestion = suggestion.replace("\n", " ")
     with path.open("a", encoding="utf-8") as fh:
-        fh.write(f"{cause}\t{evidence}\t{suggestion}\n")
+        fh.write(f"{cause}\t{scenario}\t{evidence}\t{suggestion}\n")
+
+
+def _read_failure_causes(path: Path) -> list[tuple[str, str, str, str]]:
+    rows: list[tuple[str, str, str, str]] = []
+    if not path.is_file() or path.stat().st_size == 0:
+        return rows
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        cols = line.split("\t")
+        if len(cols) != 4:
+            continue
+        rows.append((cols[0], cols[1], cols[2], cols[3]))
+    return rows
+
+
+def _write_failure_causes(path: Path, rows: list[tuple[str, str, str, str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [f"{cause}\t{scenario}\t{evidence}\t{suggestion}" for cause, scenario, evidence, suggestion in rows]
+    write_text(path, "\n".join(lines) + ("\n" if lines else ""))
+
+
+def _append_unique_failure_cause(
+    path: Path,
+    cause: str,
+    scenario: str,
+    evidence: str,
+    suggestion: str,
+) -> None:
+    existing = _read_failure_causes(path)
+    candidate = (cause, scenario, evidence, suggestion)
+    if candidate in existing:
+        return
+    _append_failure_cause(path, cause, scenario, evidence, suggestion)
 
 
 def _write_attempt_summary(
@@ -112,16 +184,25 @@ def _write_attempt_summary(
 def _write_report_input(
     output: Path,
     status: str,
+    performance_status: str,
     folder: str,
     attempts_used: int,
     change_table_file: Path,
-    failure_causes_file: Path,
+    unit_test_table: str,
+    benchmark_table: str,
+    operational_failure_causes_table: str,
+    operational_failure_suggestions_table: str,
+    benchmark_failure_causes_table: str,
+    benchmark_failure_suggestions_table: str,
     folder_run_dir: Path,
+    unit_test_log: Path,
+    benchmark_log: Path,
 ) -> None:
     lines = [
         "# Report Facts",
         "",
         f"Operation Status: {status}",
+        f"Performance Status: {performance_status}",
         f"Folder: {folder}",
         f"Attempts Used: {attempts_used}",
         "",
@@ -130,19 +211,19 @@ def _write_report_input(
     lines.extend(change_table_file.read_text(encoding="utf-8", errors="replace").rstrip().splitlines())
     lines.append("")
 
-    if status == "FAILURE":
-        lines.extend(["## Failure Causes", "", "| Cause | Evidence | Suggestion |", "|---|---|---|"])
-        if failure_causes_file.is_file() and failure_causes_file.stat().st_size > 0:
-            for row in failure_causes_file.read_text(encoding="utf-8", errors="replace").splitlines():
-                cols = row.split("\t")
-                if len(cols) != 3:
-                    continue
-                lines.append(f"| {cols[0]} | {cols[1]} | {cols[2]} |")
-        else:
-            lines.append(
-                f"| Unknown failure | {folder_run_dir / 'summary.md'} | Review the latest attempt logs and rerun after fixing the root cause. |"
-            )
-        lines.append("")
+    lines.extend(["## Unit Test Summary", ""])
+    lines.extend(unit_test_table.splitlines())
+    lines.extend(["", "## Benchmark Summary", ""])
+    lines.extend(benchmark_table.splitlines())
+    lines.extend(["", "## Operational Failure Causes", ""])
+    lines.extend(operational_failure_causes_table.splitlines())
+    lines.extend(["", "### Improvement Suggestions", ""])
+    lines.extend(operational_failure_suggestions_table.splitlines())
+    lines.extend(["", "## Benchmark Failure Causes", ""])
+    lines.extend(benchmark_failure_causes_table.splitlines())
+    lines.extend(["", "### Improvement Suggestions", ""])
+    lines.extend(benchmark_failure_suggestions_table.splitlines())
+    lines.append("")
 
     lines.extend(
         [
@@ -150,6 +231,8 @@ def _write_report_input(
             "",
             f"- Folder run directory: {folder_run_dir}",
             f"- Folder summary: {folder_run_dir / 'summary.md'}",
+            f"- Unit test log: {unit_test_log}",
+            f"- Benchmark log: {benchmark_log}",
             "",
         ]
     )
@@ -208,7 +291,8 @@ def _generate_report(
                 folder,
                 attempts_used,
                 folder_run_dir / "change_table.md",
-                folder_run_dir / "failure_causes.tsv",
+                folder_run_dir / "operational_failure_causes.tsv",
+                folder_run_dir / "benchmark_failure_causes.tsv",
             )
         )
         print(f"[gen-impl] Error: cannot write report path {report_path}: {reason}", file=sys.stderr)
@@ -244,6 +328,7 @@ def _generate_report(
             report_output_log,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            idle_timeout_seconds=cfg.spawner_idle_timeout_seconds,
             progress_callback=progress.update,
         )
 
@@ -284,18 +369,27 @@ def _process_folder(
     empty_previous_summary = folder_run_dir / "no_previous_failure_summary.md"
     folder_start_snapshot = folder_run_dir / "folder_start_snapshot"
     change_table_file = folder_run_dir / "change_table.md"
-    failure_causes_file = folder_run_dir / "failure_causes.tsv"
+    operational_failure_causes_file = folder_run_dir / "operational_failure_causes.tsv"
+    benchmark_failure_causes_file = folder_run_dir / "benchmark_failure_causes.tsv"
+    final_benchmark_log = folder_run_dir / "benchmarks.log"
+    final_unit_test_log = folder_run_dir / "tests.log"
     report_input_file = folder_run_dir / "report_input.md"
+
+    write_text(operational_failure_causes_file, "")
+    write_text(benchmark_failure_causes_file, "")
+    write_text(empty_previous_summary, "No previous attempt summary exists for this run.\n")
+
     last_failure_summary = empty_previous_summary
     attempts_used = 0
     status = "FAILURE"
+    performance_status = "NOT_RUN"
     note = "implementation attempts exhausted"
-
-    write_text(failure_causes_file, "")
-    write_text(empty_previous_summary, "No previous attempt summary exists for this run.\n")
+    latest_unit_rows: list[tuple[str, str]] = []
 
     report_path = folder_report_path(cfg.repo_root, folder)
     report_status_current = report_status_from_file(report_path)
+    report_performance_current = report_performance_status_from_file(report_path)
+    report_fresh = report_is_fresh(cfg.repo_root, folder, report_path)
     prior_attempts = report_attempts_from_file(report_path)
 
     if report_path.is_file():
@@ -304,10 +398,17 @@ def _process_folder(
         write_text(prior_report_copy, "No prior implementation report found.\n")
     extract_failure_suggestions(report_path, prior_suggestions_file)
 
-    if not cfg.force and report_status_current == "SUCCESS" and report_is_fresh(cfg.repo_root, folder, report_path):
+    run_policy = _policy_for_folder(
+        cfg.force_mode,
+        report_status_current,
+        report_performance_current,
+        report_fresh,
+    )
+
+    if run_policy.skip:
         status = "SKIPPED"
         attempts_used = prior_attempts
-        note = "fresh SUCCESS report already exists"
+        note = run_policy.note
         _write_folder_summary(summary_file, folder, status, attempts_used, report_path, note)
         with summary_tsv.open("a", encoding="utf-8") as fh:
             fh.write(f"{folder}\t{status}\t{attempts_used}\t{report_path}\n")
@@ -315,10 +416,7 @@ def _process_folder(
 
     create_phase_snapshot(folder_start_snapshot, cfg.repo_root)
 
-    need_reset = False
-    if report_status_current in {"FAILURE", "INVALID", "MISSING"} and folder_has_non_test_impl_files(cfg.repo_root, folder):
-        need_reset = True
-
+    need_reset = run_policy.clean_first and folder_has_non_test_impl_files(cfg.repo_root, folder)
     if need_reset:
         reset_dir = folder_run_dir / "reset_phase"
         reset_prompt = reset_dir / "prompt.md"
@@ -345,11 +443,13 @@ def _process_folder(
             reset_output,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            idle_timeout_seconds=cfg.spawner_idle_timeout_seconds,
             progress_callback=progress.update,
         ):
             _append_failure_cause(
-                failure_causes_file,
+                operational_failure_causes_file,
                 "Reset phase failed",
+                "(reset)",
                 str(reset_output),
                 "Check the reset prompt and spawner command, then rerun the script.",
             )
@@ -362,8 +462,9 @@ def _process_folder(
             repo_root=cfg.repo_root,
         ):
             _append_failure_cause(
-                failure_causes_file,
+                operational_failure_causes_file,
                 "Reset phase touched protected or out-of-scope files",
+                "(reset)",
                 f"{reset_dir / 'protected_violations.tsv'} and {reset_dir / 'scope_violations.tsv'}",
                 "Keep reset changes inside target implementation files only.",
             )
@@ -375,12 +476,11 @@ def _process_folder(
         phase_snapshot = attempt_dir / "snapshot"
         doc_log = attempt_dir / "doc_comment_audit.log"
         test_log = attempt_dir / "tests.log"
-        bench_log = attempt_dir / "benchmarks.log"
         command_exit = 0
         phase_ok = True
         doc_status = "SKIPPED"
         test_status = "SKIPPED"
-        bench_status = "SKIPPED"
+        bench_status = "NOT_RUN"
 
         attempt_dir.mkdir(parents=True, exist_ok=True)
         _render_template(
@@ -406,6 +506,7 @@ def _process_folder(
             output_log,
             cfg.spawner_timeout_seconds,
             cfg.repo_root,
+            idle_timeout_seconds=cfg.spawner_idle_timeout_seconds,
             progress_callback=progress.update,
         ):
             command_exit = 0
@@ -413,8 +514,9 @@ def _process_folder(
             command_exit = 1
             phase_ok = False
             _append_failure_cause(
-                failure_causes_file,
+                operational_failure_causes_file,
                 "AI command exited non-zero",
+                "(implementation)",
                 str(output_log),
                 "Fix the spawner command or prompt so the AI run finishes successfully.",
             )
@@ -429,15 +531,17 @@ def _process_folder(
             phase_ok = False
             if _count_lines(attempt_dir / "protected_violations.tsv") > 0:
                 _append_failure_cause(
-                    failure_causes_file,
+                    operational_failure_causes_file,
                     "Protected files were modified",
+                    "(scope)",
                     str(attempt_dir / "protected_violations.tsv"),
                     "Do not edit tests, specs, docs, api_contract.go, go.mod, or go.sum.",
                 )
             if _count_lines(attempt_dir / "scope_violations.tsv") > 0:
                 _append_failure_cause(
-                    failure_causes_file,
+                    operational_failure_causes_file,
                     "Out-of-scope files were modified",
+                    "(scope)",
                     str(attempt_dir / "scope_violations.tsv"),
                     "Keep all edits inside the target folder implementation files only.",
                 )
@@ -457,53 +561,41 @@ def _process_folder(
                 phase_ok = False
                 doc_status = "FAIL"
                 _append_failure_cause(
-                    failure_causes_file,
+                    operational_failure_causes_file,
                     "Doc comment audit failed",
+                    "(doc audit)",
                     str(doc_log),
                     "Align exported function comments with SPECS.md, API header rules, and actual implementation behavior.",
                 )
 
         if phase_ok:
             progress.begin_phase(f"unit tests attempt {attempt}/{cfg.max_attempts}", "log")
-            if run_make_with_timeout(
+            unit_ok = run_go_test_json_with_timeout(
                 cfg.repo_root,
+                folder,
                 cfg.test_timeout_seconds,
                 test_log,
-                "test-folder",
-                folder,
                 progress_callback=progress.update,
-            ):
+            )
+            latest_unit_rows = parse_unit_test_scenarios_from_json_log(test_log)
+            if test_log.is_file():
+                write_text(final_unit_test_log, test_log.read_text(encoding="utf-8", errors="replace"))
+            if unit_ok:
                 test_status = "PASS"
             else:
                 phase_ok = False
                 test_status = "FAIL"
-                _append_failure_cause(
-                    failure_causes_file,
-                    "Unit tests failed",
-                    str(test_log),
-                    "Read the failing tests carefully and align implementation behavior with the fixed test contract.",
-                )
-
-        if phase_ok:
-            progress.begin_phase(f"bench checks attempt {attempt}/{cfg.max_attempts}", "log")
-            if run_make_with_timeout(
-                cfg.repo_root,
-                cfg.bench_timeout_seconds,
-                bench_log,
-                "bench-folder",
-                folder,
-                progress_callback=progress.update,
-            ):
-                bench_status = "PASS"
-            else:
-                phase_ok = False
-                bench_status = "FAIL"
-                _append_failure_cause(
-                    failure_causes_file,
-                    "Benchmark checks failed",
-                    str(bench_log),
-                    "Review benchmark failures and adjust implementation until benchmark validation passes.",
-                )
+                runtime_row = runtime_failure_cause_from_log(test_log, "operational")
+                if runtime_row is not None:
+                    _append_unique_failure_cause(operational_failure_causes_file, *runtime_row)
+                else:
+                    _append_failure_cause(
+                        operational_failure_causes_file,
+                        "Unit tests failed",
+                        "(unit tests)",
+                        str(test_log),
+                        "Read the failing tests carefully and align implementation behavior with the fixed test contract.",
+                    )
 
         _write_attempt_summary(
             attempt_dir / "summary.md",
@@ -525,8 +617,78 @@ def _process_folder(
             break
         note = "last attempt failed"
 
+    benchmark_run_ok = False
+    benchmark_rows: list[tuple[str, str, str, str]] = []
+    if status == "SUCCESS":
+        progress.begin_phase("bench checks final", "log")
+        benchmark_run_ok = run_make_with_timeout(
+            cfg.repo_root,
+            cfg.bench_timeout_seconds,
+            final_benchmark_log,
+            "bench-folder",
+            folder,
+            progress_callback=progress.update,
+        )
+        benchmark_rows = parse_benchmark_rows_from_log(final_benchmark_log)
+        if not benchmark_rows:
+            benchmark_rows = [("(benchmark command)", "N/A", "BAD", "FAIL")]
+        if benchmark_run_ok and all(status_row == "PASS" for _, _, _, status_row in benchmark_rows):
+            performance_status = "PASS"
+        else:
+            performance_status = "FAIL"
+    else:
+        write_text(final_benchmark_log, "Benchmark run skipped because operational status is FAILURE.\n")
+        benchmark_rows = [("(not run)", "N/A", "BAD", "FAIL")]
+        performance_status = "NOT_RUN"
+
+    if not latest_unit_rows:
+        if status == "SUCCESS":
+            latest_unit_rows = [("(none)", "PASS")]
+        else:
+            latest_unit_rows = [("(not run)", "FAIL")]
+    if not final_unit_test_log.is_file():
+        write_text(final_unit_test_log, "Unit tests did not run in this folder processing flow.\n")
+
+    benchmark_causes = benchmark_failure_causes(
+        benchmark_rows,
+        final_benchmark_log,
+        benchmark_run_ok,
+        performance_status,
+    )
+    _write_failure_causes(benchmark_failure_causes_file, benchmark_causes)
+
+    operational_rows = _read_failure_causes(operational_failure_causes_file)
+    benchmark_rows_for_causes = _read_failure_causes(benchmark_failure_causes_file)
+
+    unit_test_table = render_scenario_table(latest_unit_rows)
+    benchmark_table = render_benchmark_table(benchmark_rows)
+    operational_failure_causes_table = render_failure_causes_table(operational_rows)
+    operational_failure_suggestions_table = render_failure_improvement_table(
+        failure_improvement_suggestions_from_causes(operational_rows)
+    )
+    benchmark_failure_causes_table = render_failure_causes_table(benchmark_rows_for_causes)
+    benchmark_failure_suggestions_table = render_failure_improvement_table(
+        failure_improvement_suggestions_from_causes(benchmark_rows_for_causes)
+    )
+
     write_change_table_markdown(folder, folder_start_snapshot, cfg.repo_root, change_table_file)
-    _write_report_input(report_input_file, status, folder, attempts_used, change_table_file, failure_causes_file, folder_run_dir)
+    _write_report_input(
+        report_input_file,
+        status,
+        performance_status,
+        folder,
+        attempts_used,
+        change_table_file,
+        unit_test_table,
+        benchmark_table,
+        operational_failure_causes_table,
+        operational_failure_suggestions_table,
+        benchmark_failure_causes_table,
+        benchmark_failure_suggestions_table,
+        folder_run_dir,
+        final_unit_test_log,
+        final_benchmark_log,
+    )
 
     report_ok, report_fatal = _generate_report(
         cfg,
@@ -546,8 +708,9 @@ def _process_folder(
         status = "FAILURE"
         note = "report generation failed"
         _append_failure_cause(
-            failure_causes_file,
+            operational_failure_causes_file,
             "Implementation report generation failed",
+            "(report)",
             str(folder_run_dir / "report_phase_*/validation.log"),
             "Fix the report prompt or spawner command, then rerun the script.",
         )
@@ -569,6 +732,7 @@ def run(cfg: Config, target: str) -> int:
         run_root,
         cfg.repo_root,
         cfg.probe_timeout_seconds,
+        cfg.spawner_idle_timeout_seconds,
         cfg.ai_spawner_command,
     )
 

@@ -71,11 +71,12 @@ AI_SPAWNER_COMMAND='opencode run --dangerously-skip-permissions [prompt]' ./.scr
 For one folder, the script:
 
 1. Reads `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` when present.
-2. Skips the folder only when the report says `SUCCESS` and the report file is newer than every non-test implementation `.go` file.
-3. If the report is missing or says `FAILURE` and implementation `.go` files already exist, runs a reset phase first so the next implementation attempt starts fresh.
+2. Applies `FORCE` rerun policy (default `FORCE=0`): skip only when report says `SUCCESS` and report file is newer than every non-test implementation `.go` file.
+3. When rerun policy selects clean-first mode and implementation `.go` files already exist, runs a reset phase first so next implementation attempt starts fresh.
 4. Runs up to `MAX_ATTEMPTS` implementation attempts.
-5. Verifies each attempt with doc-comment audit, unit tests, and benchmark tests.
-6. Runs a final AI report phase to write `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md`.
+5. Verifies each attempt with doc-comment audit and unit tests.
+6. Runs one benchmark validation pass after implementation attempts finish.
+7. Runs a final AI report phase to write `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md`.
 
 ## all Mode
 
@@ -87,18 +88,21 @@ For one folder, the script:
 
 ## Rerun Logic
 
-Previous report handling:
+Previous report handling by `FORCE` mode:
 
-- `SUCCESS` and fresh: skip folder.
-- `SUCCESS` but stale: rerun folder.
-- `FAILURE`: rerun folder and feed prior failure suggestions into the next prompt.
-- Missing or malformed report: rerun folder.
-
-Set `FORCE=1` to ignore a fresh `SUCCESS` report and rerun anyway.
+- `FORCE=0` (default):
+  - `SUCCESS` and fresh: skip folder.
+  - otherwise: rerun folder with clean-first reset.
+- `FORCE=1`:
+  - always rerun folder with clean-first reset.
+- `FORCE=2`:
+  - if prior report has `Performance Status: FAIL`: rerun folder without clean-first reset (improve in place).
+  - otherwise: fallback to `FORCE=0` behavior.
+  - missing or malformed report fields: fallback to `FORCE=0` behavior.
 
 ## Reset Logic
 
-When the report is missing or says `FAILURE`, and non-test implementation files already exist, the script first runs a reset prompt that asks the AI to forget the old implementation by replacing implementation bodies with empty stubs or placeholders.
+When rerun policy selects clean-first mode and non-test implementation files already exist, the script first runs a reset prompt that asks the AI to forget old implementation details by replacing implementation bodies with empty stubs or placeholders.
 
 The reset phase must still keep:
 
@@ -140,20 +144,33 @@ Each implementation attempt must pass, in order:
 
 1. scope and protected-file enforcement
 2. doc-comment audit
-3. `make test-folder FOLDER=<folder>`
+3. `go test -json ./<folder>/...`
+
+After implementation attempts finish, the script runs full benchmark validation once for reporting:
+
 4. `make bench-folder FOLDER=<folder>`
+
+Benchmark threshold failures do not trigger implementation retries.
 
 ## Report Contract
 
 The final report must be written to `tmp/gen-impl/reports/<folder>/IMPLEMENTATION_REPORT.md` and must contain:
 
 - `Operation Status: SUCCESS` or `Operation Status: FAILURE`
+- `Performance Status: PASS`, `FAIL`, or `NOT_RUN`
 - `Folder: <folder>`
 - `Attempts Used: <n>`
 - `## Files Changed` table
-- `## Failure Causes` table when status is `FAILURE`
+- `## Unit Test Summary` table with columns `no. | scenario | pass / fail`
+- `## Benchmark Summary` table with columns `no. | scenario | budget-ratio | good/bad | pass / fail`
+- `## Operational Failure Causes` table with columns `no. | cause | scenario | evidence | suggestion`
+- `### Improvement Suggestions` subsection under Operational Failure Causes with table `no. | cause | failed scenario | suggestion`
+- `## Benchmark Failure Causes` table with columns `no. | cause | scenario | evidence | suggestion`
+- `### Improvement Suggestions` subsection under Benchmark Failure Causes with table `no. | cause | failed scenario | suggestion`
 
-Each failure cause row must include a suggestion.
+`budget-ratio > 1.0` is treated as `BAD` and `FAIL` in benchmark summary.
+
+Failure-cause tables are always present; when no failures are recorded, they contain a `(none)` row.
 
 ## Output and Logs
 
@@ -167,12 +184,15 @@ Artifacts include prompts, AI output logs, validation logs, attempt summaries, p
 
 ## Environment Variables
 
-- `FORCE=1`: ignore fresh `SUCCESS` report and rerun.
+- `FORCE=0`: default behavior; skip only fresh `SUCCESS`, otherwise rerun clean-first.
+- `FORCE=1`: always rerun clean-first.
+- `FORCE=2`: rerun in place when prior report performance status is `FAIL`; otherwise fallback to `FORCE=0`.
 - `STOP_ON_FAILURE=1`: stop early in `all` mode after first failure.
 - `MAX_ATTEMPTS=5`: override implementation retry count.
 - `AI_SPAWNER_COMMAND`: set full AI spawner command template and run non-interactively.
 - `PROBE_TIMEOUT_SECONDS`: override spawner probe timeout.
 - `SPAWNER_TIMEOUT_SECONDS`: override AI run timeout.
+- `SPAWNER_IDLE_TIMEOUT_SECONDS`: fail AI run if no new output appears for this many seconds.
 - `DOC_AUDIT_TIMEOUT_SECONDS`: override doc-comment audit timeout.
 - `TEST_TIMEOUT_SECONDS`: override unit test timeout.
 - `BENCH_TIMEOUT_SECONDS`: override benchmark timeout.

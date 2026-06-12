@@ -48,6 +48,16 @@ def _env_str(name: str, default: str = "") -> str:
     return raw.strip()
 
 
+def _env_force_mode(name: str = "FORCE", default: int = 0) -> int:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    value = raw.strip()
+    if value not in {"0", "1", "2"}:
+        raise RuntimeError(f"invalid {name} value '{raw}'; expected one of: 0, 1, 2")
+    return int(value)
+
+
 @dataclass(frozen=True)
 class Config:
     repo_root: Path
@@ -55,9 +65,10 @@ class Config:
     max_attempts: int
     report_attempts: int
     stop_on_failure: bool
-    force: bool
+    force_mode: int
     probe_timeout_seconds: int
     spawner_timeout_seconds: int
+    spawner_idle_timeout_seconds: int
     doc_audit_timeout_seconds: int
     test_timeout_seconds: int
     bench_timeout_seconds: int
@@ -73,9 +84,10 @@ class Config:
             max_attempts=_env_int("MAX_ATTEMPTS", 5),
             report_attempts=_env_int("REPORT_ATTEMPTS", 5),
             stop_on_failure=_env_bool("STOP_ON_FAILURE", False),
-            force=_env_bool("FORCE", False),
+            force_mode=_env_force_mode("FORCE", 0),
             probe_timeout_seconds=_env_int("PROBE_TIMEOUT_SECONDS", 120),
             spawner_timeout_seconds=_env_int("SPAWNER_TIMEOUT_SECONDS", 1800),
+            spawner_idle_timeout_seconds=_env_int("SPAWNER_IDLE_TIMEOUT_SECONDS", 180),
             doc_audit_timeout_seconds=_env_int("DOC_AUDIT_TIMEOUT_SECONDS", 300),
             test_timeout_seconds=_env_int("TEST_TIMEOUT_SECONDS", 900),
             bench_timeout_seconds=_env_int("BENCH_TIMEOUT_SECONDS", 1800),

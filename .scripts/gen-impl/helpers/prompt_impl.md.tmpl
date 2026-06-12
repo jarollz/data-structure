@@ -19,7 +19,7 @@ Attempt context:
 Goal:
 - Implement or fix `@@FOLDER@@` so behavior matches the specs, API contract, tests, and benchmark policy.
 - Ensure unit tests pass.
-- Ensure benchmark tests pass.
+- Keep implementation benchmark-ready for the script's benchmark verification phase.
 
 Hard rules:
 - Modify only non-test implementation `.go` files inside `@@FOLDER@@`.
@@ -44,6 +44,8 @@ Implementation rules:
 - Treat tests, benchmarks, markdown docs, and API contracts as fixed input.
 - If prior failure suggestions exist, use them as concrete guidance.
 - If current implementation was reset to stubs, replace the stubs completely.
+- Do not run full benchmark suites in this implementation phase.
+- If you need a benchmark sanity check, run only a narrow quick check (for example one benchmark with `-benchtime=1x`).
 
 Before finishing:
 - Review your own changes carefully.
